@@ -10,7 +10,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.LayoutDirection
@@ -146,7 +148,17 @@ fun SistrumTheme(
  */
 private fun Typography.withNaturalTextDirection(layoutDirection: LayoutDirection): Typography {
     val align = if (layoutDirection == LayoutDirection.Rtl) TextAlign.Right else TextAlign.Left
-    fun TextStyle.natural() = copy(textDirection = TextDirection.Content, textAlign = align)
+    fun TextStyle.natural() = copy(
+        textDirection = TextDirection.Content,
+        textAlign = align,
+        platformStyle = PlatformTextStyle(includeFontPadding = false),
+        // Keep the same line box when Android switches to a fallback font for Arabic.
+        lineHeightStyle = LineHeightStyle(
+            alignment = LineHeightStyle.Alignment.Center,
+            trim = LineHeightStyle.Trim.None,
+            mode = LineHeightStyle.Mode.Fixed,
+        ),
+    )
     return copy(
         displayLarge = displayLarge.natural(),
         displayMedium = displayMedium.natural(),

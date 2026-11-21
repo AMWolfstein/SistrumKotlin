@@ -21,10 +21,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -91,7 +89,7 @@ fun DiscCard(
 
         Text(
             text = title,
-            style = discCardTextStyle().copy(fontWeight = FontWeight.SemiBold),
+            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
             color = tokens.colors.text,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -100,7 +98,7 @@ fun DiscCard(
 
         Text(
             text = subtitle,
-            style = discCardTextStyle(),
+            style = MaterialTheme.typography.bodyMedium,
             color = tokens.colors.mutedText,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -115,22 +113,11 @@ private val DiscCardSubtitleGap = 2.dp
 /** Room below the subtitle for glyphs that reach past the line box, such as Arabic descenders. */
 private val DiscCardBottomAllowance = 4.dp
 
-/**
- * One fixed line box per text line. Fallback fonts for scripts such as Arabic have taller
- * ascent and descent than Latin, so without it a card's height depended on the script of its
- * title and artist, and the fixed-height grids that hold the cards clipped the last line.
- */
-@Composable
-private fun discCardTextStyle(): TextStyle = MaterialTheme.typography.bodyMedium.copy(
-    lineHeightStyle = LineHeightStyle(alignment = LineHeightStyle.Alignment.Center, trim = LineHeightStyle.Trim.None),
-)
-
 /** The height of a [DiscCard] of [width]: square artwork, one title line and one subtitle line. */
 @Composable
 internal fun discCardHeight(width: Dp): Dp {
-    // Text's line box includes font metrics beyond the requested lineHeight (Trim.None).
-    // Use the measured single-line height so larger fonts cannot squeeze the subtitle.
-    val lineHeightPx = rememberTextMeasurer().measure(" ", style = discCardTextStyle(), maxLines = 1).size.height
+    // Measure the theme's single-line box at the current accessibility font scale.
+    val lineHeightPx = rememberTextMeasurer().measure(" ", style = MaterialTheme.typography.bodyMedium, maxLines = 1).size.height
     val lineHeight = with(LocalDensity.current) { lineHeightPx.toDp() }
     return width + DiscCardTitleGap + lineHeight + DiscCardSubtitleGap + lineHeight + DiscCardBottomAllowance
 }

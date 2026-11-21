@@ -89,6 +89,15 @@ class ArtistDetailsViewModelTest {
     }
 
     @Test
+    fun popularKeepsOnlyTheTwentyMostPlayedTracks() {
+        val tracks = (1..24).map { count ->
+            LibraryTrack("$count", "Song $count", "Artist", playCount = count)
+        }
+        val popular = artistReleaseSections(ArtistDetailsUiState(tracks = tracks)).popular
+        assertEquals((24 downTo 5).map(Int::toString), popular.map { it.id })
+    }
+
+    @Test
     fun emptyLibraryHasNoReleaseSectionsAndUnknownYearsUseCanonicalOrder() {
         val empty = artistReleaseSections(ArtistDetailsUiState())
         assertEquals(null, empty.latest)

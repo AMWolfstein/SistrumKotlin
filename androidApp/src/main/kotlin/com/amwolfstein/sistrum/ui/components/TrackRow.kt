@@ -3,6 +3,7 @@ package com.amwolfstein.sistrum.ui.components
 import android.graphics.Bitmap
 import android.util.LruCache
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -28,11 +30,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import java.io.File
@@ -102,9 +107,11 @@ fun TrackRow(
     onMoreClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
     trailingContent: (@Composable RowScope.() -> Unit)? = null,
+    trackNumber: Int? = null,
+    explicit: Boolean = false,
+    secondaryTextColor: Color = LocalSistrumTokens.current.colors.mutedText,
 ) {
     val tokens = LocalSistrumTokens.current
-    val bitmap = rememberArtworkThumbnail(artworkPath, audioPath)
     val clickModifier = remember(onClick, onLongClick) {
         if (onClick != null || onLongClick != null) {
             Modifier.combinedClickable(
@@ -126,29 +133,38 @@ fun TrackRow(
             .padding(contentPadding),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // 1. Artwork
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .clip(tokens.shapes.small)
-                .background(tokens.colors.opaqueFill)
-                .border(1.dp, tokens.colors.divider, tokens.shapes.small),
-            contentAlignment = Alignment.Center,
-        ) {
-            if (bitmap != null) {
-                Image(
-                    bitmap = bitmap,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.matchParentSize(),
-                )
-            } else {
-                MaterialSymbol(
-                    symbol = MaterialSymbols.MusicNote,
-                    contentDescription = null,
-                    size = 22.dp,
-                    tint = tokens.colors.mutedText,
-                )
+        if (trackNumber != null) {
+            Text(
+                text = trackNumber.toString(),
+                modifier = Modifier.widthIn(min = 28.dp),
+                style = MaterialTheme.typography.bodySmall,
+                color = secondaryTextColor,
+            )
+        } else {
+            val bitmap = rememberArtworkThumbnail(artworkPath, audioPath)
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(tokens.shapes.small)
+                    .background(tokens.colors.opaqueFill)
+                    .border(1.dp, tokens.colors.divider, tokens.shapes.small),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (bitmap != null) {
+                    Image(
+                        bitmap = bitmap,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.matchParentSize(),
+                    )
+                } else {
+                    MaterialSymbol(
+                        symbol = MaterialSymbols.MusicNote,
+                        contentDescription = null,
+                        size = 22.dp,
+                        tint = secondaryTextColor,
+                    )
+                }
             }
         }
 
@@ -159,17 +175,24 @@ fun TrackRow(
                 .padding(start = tokens.spacing.medium, end = tokens.spacing.small),
             verticalArrangement = Arrangement.Center,
         ) {
+            val explicitLabel = if (explicit) stringResource(R.string.track_explicit) else ""
+            val displayTitle = buildAnnotatedString {
+                append(title)
+                if (explicit) appendInlineContent(ExplicitBadgeId, " $explicitLabel")
+            }
             Text(
-                text = title,
+                text = displayTitle,
+                inlineContent = if (explicit) explicitBadgeInlineContent(isRtlText(title, LocalLayoutDirection.current))
+                    else emptyMap(),
                 style = MaterialTheme.typography.titleMedium,
                 color = tokens.colors.text,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
+                maxLines = 1,
+                overflow = if (explicit) TextOverflow.MiddleEllipsis else TextOverflow.Ellipsis,
             )
             Text(
                 text = artist,
                 style = MaterialTheme.typography.bodySmall,
-                color = tokens.colors.mutedText,
+                color = secondaryTextColor,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.padding(top = 2.dp),
@@ -185,7 +208,7 @@ fun TrackRow(
                     symbol = MaterialSymbols.MoreVert,
                     contentDescription = stringResource(R.string.track_row_more_options),
                     size = 20.dp,
-                    tint = tokens.colors.mutedText,
+                    tint = secondaryTextColor,
                 )
             }
         }

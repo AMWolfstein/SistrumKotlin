@@ -50,7 +50,7 @@ internal fun PlaylistRow(
                 text = name,
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                 color = tokens.colors.text,
-                maxLines = 2,
+                maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
         }
@@ -66,26 +66,27 @@ internal fun PlaylistRow(
 }
 
 @Composable
-internal fun PlaylistArtwork(playlistId: String, artworkPaths: List<String>, modifier: Modifier = Modifier, size: Dp = 110.dp) {
+internal fun PlaylistArtwork(playlistId: String, artworkPaths: List<String>, modifier: Modifier = Modifier, size: Dp = 110.dp, isHeader: Boolean = false) {
     val tokens = LocalSistrumTokens.current
     Box(
         modifier = modifier
             .size(size)
-            .clip(tokens.shapes.small)
-            .background(tokens.colors.opaqueFill)
-            .border(1.dp, tokens.colors.divider, tokens.shapes.small)
+            .then(if (isHeader) Modifier else Modifier.clip(tokens.shapes.small)
+                .background(tokens.colors.opaqueFill)
+                .border(1.dp, tokens.colors.divider, tokens.shapes.small))
             .then(if (artworkPaths.size >= 4) Modifier.testTag("playlist-artwork-mosaic") else Modifier),
         contentAlignment = Alignment.Center,
     ) {
-        val targetPx = if (size > 110.dp) 480 else 128
+        val targetPx = if (isHeader || size > 110.dp) 480 else 128
+        val contentScale = if (isHeader) ContentScale.FillBounds else ContentScale.Crop
         when {
             artworkPaths.size >= 4 -> {
                 Column(Modifier.fillMaxSize()) {
-                    PlaylistArtworkPair(artworkPaths.take(2), targetPx)
-                    PlaylistArtworkPair(artworkPaths.drop(2).take(2), targetPx)
+                    PlaylistArtworkPair(artworkPaths.take(2), targetPx, contentScale)
+                    PlaylistArtworkPair(artworkPaths.drop(2).take(2), targetPx, contentScale)
                 }
             }
-            artworkPaths.isNotEmpty() -> PlaylistArtworkImage(artworkPaths.first(), Modifier.fillMaxSize(), targetPx)
+            artworkPaths.isNotEmpty() -> PlaylistArtworkImage(artworkPaths.first(), Modifier.fillMaxSize(), targetPx, contentScale)
             else -> MaterialSymbol(
                 symbol = if (playlistId == "favorites") MaterialSymbols.Favorite else MaterialSymbols.QueueMusic,
                 contentDescription = null,
@@ -98,14 +99,14 @@ internal fun PlaylistArtwork(playlistId: String, artworkPaths: List<String>, mod
 }
 
 @Composable
-private fun ColumnScope.PlaylistArtworkPair(paths: List<String>, targetPx: Int) {
+private fun ColumnScope.PlaylistArtworkPair(paths: List<String>, targetPx: Int, contentScale: ContentScale) {
     Row(Modifier.fillMaxWidth().weight(1f)) {
-        paths.forEach { path -> PlaylistArtworkImage(path, Modifier.weight(1f).fillMaxSize(), targetPx) }
+        paths.forEach { path -> PlaylistArtworkImage(path, Modifier.weight(1f).fillMaxSize(), targetPx, contentScale) }
     }
 }
 
 @Composable
-private fun PlaylistArtworkImage(path: String, modifier: Modifier, targetPx: Int) {
+private fun PlaylistArtworkImage(path: String, modifier: Modifier, targetPx: Int, contentScale: ContentScale) {
     val bitmap = rememberArtworkThumbnail(path, targetPx = targetPx)
-    if (bitmap != null) Image(bitmap, null, modifier = modifier, contentScale = ContentScale.Crop)
+    if (bitmap != null) Image(bitmap, null, modifier = modifier, contentScale = contentScale)
 }

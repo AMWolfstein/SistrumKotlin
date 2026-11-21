@@ -1,13 +1,12 @@
 package com.amwolfstein.sistrum.ui.screens
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -45,12 +44,14 @@ import com.amwolfstein.sistrum.ui.theme.LocalSistrumTokens
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.ReorderableCollectionItemScope
 import sh.calvin.reorderable.rememberReorderableLazyListState
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.ui.text.style.TextAlign
 import com.amwolfstein.sistrum.ui.components.MornyeDetailScaffold
 import com.amwolfstein.sistrum.ui.components.MornyeActionRow
-import com.amwolfstein.sistrum.ui.components.MornyeSongRow
+import com.amwolfstein.sistrum.ui.components.MornyeArtworkOverlay
+import com.amwolfstein.sistrum.sync.isExplicit
 import com.amwolfstein.sistrum.ui.components.MornyeDetailFooter
 
 @Composable
@@ -83,7 +84,8 @@ internal fun PlaylistDetailsContent(
         MornyeDetailScaffold(
             title = stringResource(R.string.playlist_details_empty_title),
             onBack = onBack,
-            modifier = modifier.padding(bottom = contentPadding.calculateBottomPadding()),
+            modifier = modifier,
+            bottomNavigationPadding = contentPadding.calculateBottomPadding(),
         ) {
             item("unavailable") {
                 HeroCard(
@@ -131,12 +133,14 @@ internal fun PlaylistDetailsContent(
         artworkPath = coverPaths.firstOrNull(),
         onHeroColorChanged = onHeroColorChanged,
         listState = listState,
-        modifier = modifier.padding(bottom = contentPadding.calculateBottomPadding()),
-        artworkContent = {
-            BoxWithConstraints(Modifier.fillMaxSize()) {
-                PlaylistArtwork(playlist.id, coverPaths, size = maxWidth)
+        modifier = modifier,
+        bottomNavigationPadding = contentPadding.calculateBottomPadding(),
+        artworkOverlay = MornyeArtworkOverlay.Title,
+        artworkContent = if (uiState.customArtworkPath == null) {
+            {
+                PlaylistArtwork(playlist.id, coverPaths, modifier = Modifier.fillMaxSize(), isHeader = true)
             }
-        },
+        } else null,
         header = {
             Text(count, Modifier.fillMaxWidth(), color = Color.White,
                 textAlign = TextAlign.Center, style = MaterialTheme.typography.bodySmall)
@@ -164,15 +168,18 @@ internal fun PlaylistDetailsContent(
             )
         },
     ) {
-        items(orderedTrackIds, key = { it }) { trackId ->
-            val track = tracksById[trackId] ?: return@items
+        itemsIndexed(orderedTrackIds, key = { _, trackId -> trackId }) { index, trackId ->
+            val track = tracksById[trackId] ?: return@itemsIndexed
+            val explicit = track.isExplicit()
+            val secondaryTextColor = Color.White.copy(alpha = 0.72f)
             if (isReordering) {
                 ReorderableItem(reorderableState, key = trackId) { isDragging ->
                     TrackRow(
                         title = track.title,
                         artist = track.artists,
-                        artworkPath = track.artworkPath,
-                        audioPath = track.audioPath,
+                        trackNumber = index + 1,
+                        explicit = explicit,
+                        secondaryTextColor = secondaryTextColor,
                         modifier = Modifier.fillMaxWidth().then(
                             if (isDragging) Modifier.clip(tokens.shapes.medium).liquidGlassBackground(
                                 hazeState, glassTint = LocalSistrumTokens.current.colors.glassTint, borderShape = tokens.shapes.medium,
@@ -216,13 +223,23 @@ internal fun PlaylistDetailsContent(
                     onRemoveFromPlaylist = { onTrackRemoveFromPlaylist(it.id) },
                     onBottomSheetRequested = onTrackContextBottomSheet,
                 ) {
-                    MornyeSongRow(
-                        track = track,
+                    TrackRow(
+                        title = track.title,
+                        artist = track.artists,
+                        trackNumber = index + 1,
+                        explicit = explicit,
+                        secondaryTextColor = secondaryTextColor,
                         onClick = { onTrackClick(track.id) },
-                        onMore = { contextTrack = track.id },
+                        onMoreClick = { contextTrack = track.id },
                         onLongClick = { contextTrack = track.id },
                     )
                 }
+            }
+            if (index < orderedTrackIds.lastIndex) {
+                HorizontalDivider(
+                    Modifier.padding(horizontal = 24.dp),
+                    color = Color.White.copy(alpha = 0.14f),
+                )
             }
         }
         item("footer") {

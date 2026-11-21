@@ -358,10 +358,10 @@ internal fun App(
             )
             AlbumHeroHeaderGradient(
                 color = albumHeroColor,
-                visible = currentPage == AppStackPage.GenreDetails || currentPage == AppStackPage.ComposerDetails,
+                visible = currentPage == AppStackPage.ComposerDetails,
             )
             if (currentPage != AppStackPage.AlbumDetails && currentPage != AppStackPage.ArtistDetails &&
-                currentPage != AppStackPage.PlaylistDetails) StackPageHeader(
+                currentPage != AppStackPage.PlaylistDetails && currentPage != AppStackPage.GenreDetails) StackPageHeader(
                 title = pageTitle,
                 hazeState = hazeState,
                 isContentScrolled = showHeaderBlur,

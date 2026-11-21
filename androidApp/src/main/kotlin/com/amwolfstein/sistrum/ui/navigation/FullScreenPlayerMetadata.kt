@@ -1,8 +1,9 @@
 package com.amwolfstein.sistrum.ui.navigation
 
 import com.amwolfstein.sistrum.ui.components.isRtlText
+import com.amwolfstein.sistrum.ui.components.ExplicitBadgeId
+import com.amwolfstein.sistrum.ui.components.explicitBadgeInlineContent
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.AbsoluteAlignment
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.fadeIn
@@ -14,16 +15,8 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.text.Placeholder
-import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.buildAnnotatedString
 import com.amwolfstein.sistrum.sync.isExplicit
 import androidx.compose.foundation.layout.Row
@@ -164,7 +157,7 @@ private fun FullScreenPlayerMetadata(
                 val explicitLabel = stringResource(R.string.track_explicit)
                 val title = buildAnnotatedString { append(item.title); appendInlineContent(ExplicitBadgeId, " $explicitLabel") }
                 val titleIsRtl = isRtlText(item.title, LocalLayoutDirection.current)
-                SistrumMarqueeText(title, colors.onPrimary, titleStyle, animate = isPlaying, inlineContent = explicitBadgeInlineContent(titleIsRtl))
+                SistrumMarqueeText(title, colors.onPrimary, titleStyle, animate = isPlaying, inlineContent = explicitBadgeInlineContent(titleIsRtl, FullScreenPlayerExplicitBadgeTestTag))
             } else {
                 SistrumMarqueeText(item.title, colors.onPrimary, titleStyle, animate = isPlaying)
             }
@@ -224,30 +217,4 @@ internal fun FullScreenQualityDialog(labelRes: Int, symbol: String, details: Lis
     }
 }
 
-private const val ExplicitBadgeId = "explicit"
 internal const val FullScreenPlayerExplicitBadgeTestTag = "full_screen_explicit_badge"
-
-/**
- * An "E" in a small rounded square, placed 6dp after the title. The badge follows the title's
- * own direction, so it sits to the left of an Arabic title and to the right of a Latin one.
- */
-@Composable
-private fun explicitBadgeInlineContent(titleIsRtl: Boolean): Map<String, InlineTextContent> {
-    val colors = LocalSistrumColors.current
-    val density = LocalDensity.current
-    val placeholder = with(density) { Placeholder(24.dp.toSp(), 18.dp.toSp(), PlaceholderVerticalAlign.TextCenter) }
-    return mapOf(
-        ExplicitBadgeId to InlineTextContent(placeholder) {
-            Box(Modifier.fillMaxSize(), contentAlignment = if (titleIsRtl) AbsoluteAlignment.CenterLeft else AbsoluteAlignment.CenterRight) {
-                Box(
-                    Modifier.size(18.dp).clip(RoundedCornerShape(4.dp))
-                        .background(colors.foregroundSubtle.copy(alpha = 0.85f))
-                        .clearAndSetSemantics { testTag = FullScreenPlayerExplicitBadgeTestTag },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text("E", color = colors.playerBackdrop, fontSize = with(density) { 12.dp.toSp() }, fontWeight = FontWeight.Bold, lineHeight = with(density) { 12.dp.toSp() })
-                }
-            }
-        },
-    )
-}

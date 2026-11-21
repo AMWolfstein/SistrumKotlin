@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
@@ -29,6 +30,8 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.amwolfstein.sistrum.R
 import com.amwolfstein.sistrum.sync.LibraryTrack
@@ -50,6 +53,7 @@ internal fun mornyePageTint(dominant: Color?): Color = dominant?.takeIf { it.alp
 } ?: MornyeFallbackTint
 
 enum class MornyePlayShape { Pill, Circle }
+enum class MornyeArtworkOverlay { None, Title, Header }
 
 /** Shared page only; callers retain their lists, menus, metadata and playback callbacks. */
 @Composable
@@ -63,6 +67,8 @@ fun MornyeDetailScaffold(
     onHeroColorChanged: (Color) -> Unit = {},
     artworkContent: (@Composable BoxScope.() -> Unit)? = null,
     titleStyle: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.headlineLarge,
+    bottomNavigationPadding: Dp = 0.dp,
+    artworkOverlay: MornyeArtworkOverlay = MornyeArtworkOverlay.None,
     header: @Composable ColumnScope.() -> Unit = {},
     content: LazyListScope.() -> Unit,
 ) {
@@ -74,6 +80,8 @@ fun MornyeDetailScaffold(
         onHeroColorChanged(dominant ?: MornyeFallbackTint)
     }
     val tokens = LocalSistrumTokens.current
+    // The window chooses its system icon colors from the app theme.
+    val lightSystemBars = tokens.colors.page.luminance() > 0.5f
     val tintedTokens = tokens.copy(colors = tokens.colors.copy(
         page = page, opaqueFill = page, glassTint = Color.White.copy(alpha = 0.10f),
         text = Color.White, mutedText = Color.White, divider = Color.White.copy(alpha = 0.22f),
@@ -82,42 +90,114 @@ fun MornyeDetailScaffold(
     val policy = GlassPolicy.resolve(LocalReduceTransparency.current, Build.VERSION.SDK_INT >= 33,
         LocalGlassPerformanceFallback.current || LocalReducedMotion.current)
     val glassHaze = haze.takeIf { policy == GlassPolicy.Blur }
+    val edgeToEdge = artworkOverlay != MornyeArtworkOverlay.None
+    val hasArtwork = bitmap != null || artworkContent != null
     val collapsed by remember(listState) { derivedStateOf { listState.firstVisibleItemIndex > 0 } }
     CompositionLocalProvider(LocalSistrumTokens provides tintedTokens, LocalMornyeHaze provides glassHaze) {
         Box(modifier.fillMaxSize().testTag("mornye-page")) {
             Box(Modifier.matchParentSize().hazeSource(haze).background(page))
-            LazyColumn(state = listState, modifier = Modifier.fillMaxSize().testTag("mornye-list"),
-                contentPadding = PaddingValues(bottom = 24.dp)) {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize()
+                    .padding(bottom = if (edgeToEdge) 0.dp else bottomNavigationPadding)
+                    .testTag("mornye-list"),
+                contentPadding = PaddingValues(bottom = 24.dp + if (edgeToEdge) bottomNavigationPadding else 0.dp),
+            ) {
                 item(key = "mornye-header") {
-                    Column {
-                        Box(Modifier.fillMaxWidth().heightIn(min = 340.dp)) {
-                            Box(Modifier.matchParentSize().hazeSource(haze)) {
-                                if (artworkContent != null) artworkContent()
-                                else if (bitmap != null) Image(bitmap, null, Modifier.matchParentSize().testTag("mornye-artwork-image"), contentScale = ContentScale.Crop)
-                                else Box(Modifier.matchParentSize().background(page).testTag("mornye-artwork-fallback"))
-                                Box(Modifier.matchParentSize().background(Brush.verticalGradient(
-                                    0f to Color.Transparent, 0.45f to page.copy(alpha = 0.20f), 1f to page)))
-                            }
-                            // The opaque tint under text guarantees contrast even over a bright photograph.
-                            Column(Modifier.align(Alignment.BottomCenter)) {
-                                Spacer(Modifier.height(240.dp))
-                                Text(title, Modifier.fillMaxWidth().background(page)
-                                    .padding(horizontal = 24.dp, vertical = 12.dp).testTag("mornye-header-title"),
-                                    color = Color.White, style = titleStyle,
-                                    fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                    val showArtworkOverlay = edgeToEdge && hasArtwork
+                    val artwork: @Composable () -> Unit = {
+                        Box(
+                            Modifier.fillMaxWidth().hazeSource(haze),
+                            contentAlignment = Alignment.TopCenter,
+                        ) {
+                            val artworkHeight = if (showArtworkOverlay) 440.dp else 340.dp
+                            when {
+                                artworkContent != null -> Box(
+                                    Modifier.fillMaxWidth().height(artworkHeight),
+                                    content = artworkContent,
+                                )
+                                bitmap != null -> Image(
+                                    bitmap = bitmap,
+                                    contentDescription = null,
+                                    modifier = Modifier.fillMaxWidth().height(artworkHeight)
+                                        .testTag("mornye-artwork-image"),
+                                    contentScale = ContentScale.FillBounds,
+                                )
+                                else -> Spacer(Modifier.fillMaxWidth().height(240.dp).testTag("mornye-artwork-fallback"))
                             }
                         }
-                        Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally, content = header)
+                    }
+                    val titleContent: @Composable () -> Unit = {
+                        Text(
+                            title,
+                            Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp)
+                                .testTag("mornye-header-title"),
+                            color = Color.White,
+                            style = titleStyle,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                    val headerContent: @Composable () -> Unit = {
+                        Column(
+                            Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            content = header,
+                        )
+                    }
+                    if (showArtworkOverlay) {
+                        Column {
+                            Box(Modifier.fillMaxWidth().heightIn(min = 360.dp)) {
+                                artwork()
+                                Box(Modifier.matchParentSize().background(Brush.verticalGradient(
+                                    0.32f to Color.Transparent,
+                                    0.62f to page.copy(alpha = 0.78f),
+                                    1f to page,
+                                )))
+                                Column(
+                                    Modifier.align(Alignment.BottomCenter)
+                                        .statusBarsPadding()
+                                        .padding(top = 72.dp, bottom = 8.dp),
+                                ) {
+                                    titleContent()
+                                    if (artworkOverlay == MornyeArtworkOverlay.Header) headerContent()
+                                }
+                            }
+                            if (artworkOverlay == MornyeArtworkOverlay.Title) headerContent()
+                        }
+                    } else {
+                        Column(Modifier.statusBarsPadding()) {
+                            artwork()
+                            titleContent()
+                            headerContent()
+                        }
                     }
                 }
                 content()
             }
-            Row(Modifier.fillMaxWidth().background(if (collapsed) page else Color.Transparent)
-                .statusBarsPadding().heightIn(min = 56.dp), verticalAlignment = Alignment.CenterVertically) {
+            val statusBarContrast = if (lightSystemBars) Color.White else Color.Black
+            val statusBarBackground = if (edgeToEdge && hasArtwork && !collapsed) {
+                Modifier.background(Brush.verticalGradient(
+                    listOf(statusBarContrast.copy(alpha = 0.30f), Color.Transparent),
+                ))
+            } else {
+                Modifier.background(if (lightSystemBars) tokens.colors.page else page)
+            }
+            Spacer(
+                Modifier.fillMaxWidth().windowInsetsTopHeight(WindowInsets.statusBars).then(statusBarBackground),
+            )
+            if (lightSystemBars && !edgeToEdge && bottomNavigationPadding > 0.dp) {
+                Spacer(Modifier.align(Alignment.BottomCenter).fillMaxWidth()
+                    .windowInsetsBottomHeight(WindowInsets.navigationBars).background(tokens.colors.page))
+            }
+            Row(Modifier.fillMaxWidth().statusBarsPadding().background(if (collapsed) page else Color.Transparent)
+                .heightIn(min = 56.dp), verticalAlignment = Alignment.CenterVertically) {
                 MornyeRoundAction(MaterialSymbols.ChevronLeft, stringResource(R.string.navigate_back), onBack)
                 if (collapsed) Text(title, Modifier.weight(1f).padding(vertical = 12.dp).testTag("mornye-collapsed-title"),
-                    color = Color.White, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
+                    color = Color.White, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis)
                 else Spacer(Modifier.weight(1f))
                 Spacer(Modifier.size(48.dp))
             }
@@ -157,7 +237,7 @@ fun MornyeActionRow(
                 if (pill) Text(playLabel, color = Color.Black, style = MaterialTheme.typography.labelLarge)
             }
         }
-        menu { MornyeRoundAction("more_horiz", moreLabel, onMore) }
+        menu { MornyeRoundAction(MaterialSymbols.MoreHoriz, moreLabel, onMore) }
     }
 }
 
@@ -192,14 +272,16 @@ fun MornyeSongRow(
             else MaterialSymbol(MaterialSymbols.MusicNote, null, tint = Color.White)
         }
         Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
-            Text(track.title, color = Color.White, style = MaterialTheme.typography.bodyLarge)
-            Text(track.artists, color = Color.White, style = MaterialTheme.typography.bodySmall)
+            Text(track.title, color = Color.White, style = MaterialTheme.typography.bodyLarge,
+                maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(track.artists, color = Color.White, style = MaterialTheme.typography.bodySmall,
+                maxLines = 1, overflow = TextOverflow.Ellipsis)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 if (track.isExplicit()) Text(stringResource(R.string.track_explicit), color = Color.White, style = MaterialTheme.typography.labelSmall)
                 TrackQualityBadge(trackAudioQuality(track))
             }
         }
-        menu { MornyeRoundAction("more_horiz", stringResource(R.string.track_row_more_options), onMore) }
+        menu { MornyeRoundAction(MaterialSymbols.MoreHoriz, stringResource(R.string.track_row_more_options), onMore) }
     }
 }
 

@@ -88,7 +88,7 @@ fun ArtistRow(
                 .padding(start = tokens.spacing.medium, end = tokens.spacing.small),
             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
             color = tokens.colors.text,
-            maxLines = 2,
+            maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
 

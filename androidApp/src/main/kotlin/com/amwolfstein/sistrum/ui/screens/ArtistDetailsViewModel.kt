@@ -147,7 +147,7 @@ internal fun artistReleaseSections(state: ArtistDetailsUiState): ArtistReleaseSe
         albums = own.filter { counts.getValue(it.id) >= 7 },
         singles = own.filter { counts.getValue(it.id) in 1..6 },
         compilations = compilations,
-        popular = state.tracks.sortedByDescending { it.playCount },
+        popular = state.tracks.sortedByDescending { it.playCount }.take(20),
         songCounts = counts,
     )
 }

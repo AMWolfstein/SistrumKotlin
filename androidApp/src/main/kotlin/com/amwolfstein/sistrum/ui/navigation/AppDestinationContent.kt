@@ -627,6 +627,7 @@ internal fun AppDestinationContent(
                             )
                             AppStackPage.GenreDetails -> GenreDetailsContent(
                                 uiState = selectedGenreDetails,
+                                onBack = { onIntent(AppIntent.NavigateBack) },
                                 listState = genreDetailsListState,
                                 contentPadding = contentPadding,
                                 modifier = Modifier.fillMaxSize(),

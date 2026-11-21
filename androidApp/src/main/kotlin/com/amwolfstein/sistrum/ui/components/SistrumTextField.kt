@@ -17,6 +17,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.res.stringResource
@@ -30,10 +31,10 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.amwolfstein.sistrum.ui.theme.LocalSistrumColors
 import com.amwolfstein.sistrum.R
@@ -69,6 +70,9 @@ fun SistrumTextField(
     val focusManager = LocalFocusManager.current
     val shape = RoundedCornerShape((size.height / 2).dp)
     val showsDefaultClearAction = trailingContent == null && showClearButton && enabled && value.isNotEmpty()
+    val fieldTextStyle = MaterialTheme.typography.bodyMedium.copy(
+        fontSize = size.textSize.sp, lineHeight = 1.45.em, fontWeight = FontWeight.Medium,
+    )
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
@@ -85,7 +89,7 @@ fun SistrumTextField(
                 end = if (showsDefaultClearAction) 0.dp else size.horizontalPadding.dp,
             ),
         singleLine = true,
-        textStyle = TextStyle(fontSize = size.textSize.sp, fontWeight = FontWeight.Medium, color = colors.textMain),
+        textStyle = fieldTextStyle.copy(color = colors.textMain),
         cursorBrush = SolidColor(colors.primary),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Done),
         keyboardActions = KeyboardActions(onDone = {
@@ -102,7 +106,7 @@ fun SistrumTextField(
                     if (value.isEmpty() && showPlaceholderAndLeadingSymbol) {
                         BasicText(
                             text = placeholder,
-                            style = TextStyle(fontSize = size.textSize.sp, fontWeight = FontWeight.Medium, color = colors.textMuted),
+                            style = fieldTextStyle.copy(color = colors.textMuted),
                         )
                     }
                     innerTextField()

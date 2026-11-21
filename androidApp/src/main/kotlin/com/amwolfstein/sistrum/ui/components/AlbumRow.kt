@@ -87,7 +87,7 @@ fun AlbumRow(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
                 color = tokens.colors.text,
-                maxLines = 2,
+                maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             Text(

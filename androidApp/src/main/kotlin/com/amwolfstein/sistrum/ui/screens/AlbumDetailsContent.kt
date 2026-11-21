@@ -12,12 +12,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.ui.unit.dp
 import dev.chrisbanes.haze.HazeState
 import com.amwolfstein.sistrum.R
 import com.amwolfstein.sistrum.player.PlaybackQueueSnapshot
+import com.amwolfstein.sistrum.sync.isExplicit
 import com.amwolfstein.sistrum.ui.components.AlbumContextMenu
 import com.amwolfstein.sistrum.ui.components.HeroCard
 import com.amwolfstein.sistrum.ui.components.MaterialSymbols
@@ -26,9 +28,11 @@ import com.amwolfstein.sistrum.ui.components.TrackContextMenu
 import com.amwolfstein.sistrum.ui.components.TrackContextMenuActions
 import com.amwolfstein.sistrum.ui.components.TrackContextBottomSheetRequest
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import com.amwolfstein.sistrum.ui.components.MornyeDetailScaffold
+import com.amwolfstein.sistrum.ui.components.MornyeArtworkOverlay
 import com.amwolfstein.sistrum.ui.components.MornyeActionRow
-import com.amwolfstein.sistrum.ui.components.MornyeSongRow
+import com.amwolfstein.sistrum.ui.components.TrackRow
 import com.amwolfstein.sistrum.ui.components.MornyeDetailFooter
 import com.amwolfstein.sistrum.ui.components.trackInfoValues
 import com.amwolfstein.sistrum.ui.components.trackAudioQuality
@@ -59,7 +63,8 @@ internal fun AlbumDetailsContent(
         MornyeDetailScaffold(
             title = stringResource(R.string.album_details_empty_title),
             onBack = onBack,
-            modifier = modifier.padding(bottom = contentPadding.calculateBottomPadding()),
+            modifier = modifier,
+            bottomNavigationPadding = contentPadding.calculateBottomPadding(),
         ) {
             item("unavailable") {
                 HeroCard(symbol = MaterialSymbols.Album, title = stringResource(R.string.album_details_empty_title),
@@ -84,12 +89,14 @@ internal fun AlbumDetailsContent(
         onBack = onBack,
         artworkPath = album.artworkPath,
         audioPath = album.audioPath,
+        artworkOverlay = MornyeArtworkOverlay.Title,
         onHeroColorChanged = onHeroColorChanged,
-        modifier = modifier.padding(bottom = contentPadding.calculateBottomPadding()),
+        modifier = modifier,
+        bottomNavigationPadding = contentPadding.calculateBottomPadding(),
         header = {
             Text(album.artist.ifBlank { stringResource(R.string.album_unknown_artist) },
                 Modifier.fillMaxWidth().testTag("album-mornye-artist"), color = Color.White, textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.titleMedium)
+                style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(metadata, Modifier.fillMaxWidth().testTag("album-mornye-metadata"), color = Color.White,
                 textAlign = TextAlign.Center, style = MaterialTheme.typography.bodySmall)
             MornyeActionRow(
@@ -124,6 +131,8 @@ internal fun AlbumDetailsContent(
                         style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(16.dp))
                 }
             }
+            val nextTrack = uiState.tracks.getOrNull(index + 1)
+            val showDivider = nextTrack != null && nextTrack.discNumber.coerceAtLeast(1) == disc
             item(track.id) {
                 TrackContextMenu(
                     track = track,
@@ -137,13 +146,21 @@ internal fun AlbumDetailsContent(
                     onGoToArtist = onTrackArtistClick,
                     onBottomSheetRequested = onTrackContextBottomSheet,
                 ) {
-                    MornyeSongRow(
-                        track = track,
-                        number = track.trackNumber.takeIf { it > 0 } ?: index + 1,
-                        modifier = Modifier.fillMaxWidth(),
+                    TrackRow(
+                        title = track.title,
+                        artist = track.artists,
+                        trackNumber = track.trackNumber.takeIf { it > 0 } ?: index + 1,
+                        explicit = track.isExplicit(),
+                        secondaryTextColor = Color.White.copy(alpha = 0.72f),
                         onClick = { onTrackClick(track.id) },
-                        onMore = { contextTrack = track.id },
+                        onMoreClick = { contextTrack = track.id },
                         onLongClick = { contextTrack = track.id },
+                    )
+                }
+                if (showDivider) {
+                    HorizontalDivider(
+                        Modifier.padding(horizontal = 24.dp),
+                        color = Color.White.copy(alpha = 0.14f),
                     )
                 }
             }
