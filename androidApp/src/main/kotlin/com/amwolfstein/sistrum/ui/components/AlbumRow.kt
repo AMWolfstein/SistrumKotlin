@@ -85,6 +85,7 @@ fun AlbumRow(
         ) {
             Text(
                 text = title,
+                modifier = rememberCardTextLine(MaterialTheme.typography.titleMedium).modifier,
                 style = MaterialTheme.typography.titleMedium,
                 color = tokens.colors.text,
                 maxLines = 1,
@@ -92,11 +93,12 @@ fun AlbumRow(
             )
             Text(
                 text = artist,
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.bodyMedium,
                 color = tokens.colors.mutedText,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 2.dp),
+                modifier = Modifier.padding(top = 2.dp)
+                    .then(rememberCardTextLine(MaterialTheme.typography.bodyMedium).modifier),
             )
         }
 

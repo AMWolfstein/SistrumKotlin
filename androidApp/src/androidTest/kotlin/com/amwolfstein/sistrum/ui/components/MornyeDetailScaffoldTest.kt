@@ -2,6 +2,9 @@ package com.amwolfstein.sistrum.ui.components
 
 import android.os.Build
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Text
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
@@ -56,6 +59,26 @@ class MornyeDetailScaffoldTest(private val case: UiMatrix.Case) {
         }
     }
     private fun label(english: String, arabic: String) = if (case.language == "ar") arabic else english
+
+    @Test fun artworkOverlapsTheTitleWithoutAddingSpaceBeforeTheSubtitle() {
+        matrix.setContent {
+            MornyeDetailScaffold(
+                title = "وبعدين",
+                onBack = {},
+                artworkOverlay = MornyeArtworkOverlay.Title,
+                artworkContent = { Box(Modifier.fillMaxSize().testTag("test-album-cover")) },
+                titleBottomSpacing = 5.dp,
+                header = { Text("Tamer Hosny", Modifier.testTag("test-album-artist")) },
+            ) {}
+        }
+        val artwork = rule.onNodeWithTag("test-album-cover").fetchSemanticsNode().boundsInRoot
+        val title = rule.onNodeWithTag("mornye-header-title").fetchSemanticsNode().boundsInRoot
+        val subtitle = rule.onNodeWithTag("test-album-artist").fetchSemanticsNode().boundsInRoot
+        with(rule.density) {
+            assertEquals(20.dp.toPx(), artwork.bottom - title.top, 1f)
+            assertEquals(5.dp.toPx(), subtitle.top - title.bottom, 1f)
+        }
+    }
 
     @Test fun headerCollapsesToCenteredTitleAndBackStillWorks() {
         show()

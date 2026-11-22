@@ -31,6 +31,7 @@ data class AppUiState(
     val motionEnabled: Boolean = false,
     val motionNetworkMode: MotionNetworkMode = MotionNetworkMode.WIFI_ONLY,
     val selectedAlbumId: String? = null,
+    val selectedHomeMixId: String? = null,
     val selectedArtistId: String? = null,
     val selectedGenreId: String? = null,
     val selectedComposerId: String? = null,
@@ -54,6 +55,7 @@ class MainViewModel(
 ) : ViewModel() {
     private val selectedDestination = MutableStateFlow(AppDestination.Home)
     private val destinationStacks = MutableStateFlow(rootDestinationStacks())
+    private val selectedHomeMixId = MutableStateFlow<String?>(null)
     private val selectedAlbumId = MutableStateFlow<String?>(null)
     private val selectedArtistId = MutableStateFlow<String?>(null)
     private val selectedGenreId = MutableStateFlow<String?>(null)
@@ -78,6 +80,8 @@ class MainViewModel(
             selectedAlbumId = albumId,
             destinationStacks = pages,
         )
+    }.combine(selectedHomeMixId) { state, mixId ->
+        state.copy(selectedHomeMixId = mixId)
     }.combine(selectedArtistId) { state, artistId ->
         state.copy(selectedArtistId = artistId)
     }.combine(selectedGenreId) { state, genreId ->
@@ -106,6 +110,10 @@ class MainViewModel(
         when (intent) {
             is AppIntent.SelectDestination -> selectDestination(intent.destination)
             is AppIntent.OpenPage -> openPage(intent.page)
+            is AppIntent.OpenHomeMix -> {
+                selectedHomeMixId.value = intent.mixId
+                openPage(AppStackPage.HomeMix)
+            }
             is AppIntent.OpenAlbumDetails -> openAlbumDetails(intent.albumId)
             is AppIntent.OpenPlaylistDetails -> openPlaylistDetails(intent.playlistId)
             is AppIntent.OpenArtistDetails -> openArtistDetails(intent.artistId)
@@ -207,6 +215,7 @@ class MainViewModel(
      */
     private fun clearPoppedPageState(page: AppStackPage) {
         when (page) {
+            AppStackPage.HomeMix -> selectedHomeMixId.value = null
             AppStackPage.AlbumDetails -> selectedAlbumId.value = null
             AppStackPage.PlaylistDetails -> selectedPlaylistId.value = null
             AppStackPage.ArtistDetails -> selectedArtistId.value = null

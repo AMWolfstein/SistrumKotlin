@@ -126,13 +126,20 @@ internal fun LibrarySearchContent(
                                 artworkPath = album.artworkPath,
                                 audioPath = album.audioPath,
                                 fallbackSymbol = MaterialSymbols.Album,
+                                titleStyle = MaterialTheme.typography.bodyLarge,
+                                subtitleGap = 0.dp,
                                 onClick = { onAlbumClick(album.id) },
                                 onLongClick = { contextAlbumId = album.id },
                             )
                         }
                     }
                     searchSection(R.string.library_artists, uiState.artists, { it.id }, topPadding = tokens.spacing.large) { artist ->
-                        DiscCard(artist.name, "", artworkPath = artist.artworkPath, fallbackSymbol = MaterialSymbols.Person, artworkShape = CircleShape, onClick = { onArtistClick(artist.id) })
+                        DiscCard(
+                            title = artist.name, subtitle = "", artworkPath = artist.artworkPath,
+                            fallbackSymbol = MaterialSymbols.Person, artworkShape = CircleShape,
+                            titleStyle = MaterialTheme.typography.bodyLarge, subtitleGap = 0.dp, centerTitle = true,
+                            onClick = { onArtistClick(artist.id) },
+                        )
                     }
                     searchSection(R.string.library_playlists, uiState.playlists, { it.id }, topPadding = tokens.spacing.large) { playlist ->
                         DiscCard(
@@ -141,11 +148,18 @@ internal fun LibrarySearchContent(
                             artworkPath = uiState.allTracks.firstOrNull { it.id in playlist.trackIds }?.artworkPath,
                             audioPath = uiState.allTracks.firstOrNull { it.id in playlist.trackIds }?.audioPath,
                             fallbackSymbol = MaterialSymbols.QueueMusic,
+                            titleStyle = MaterialTheme.typography.bodyLarge,
+                            subtitleGap = 0.dp,
                             onClick = { onPlaylistClick(playlist.id) },
                         )
                     }
                     searchSection(R.string.library_composers, uiState.composers, { it.id }, topPadding = tokens.spacing.large) { composer ->
-                        DiscCard(composer.name, "", artworkPath = composer.artworkPath, fallbackSymbol = MaterialSymbols.StylusFountainPen, artworkShape = CircleShape, onClick = { onComposerClick(composer.id) })
+                        DiscCard(
+                            title = composer.name, subtitle = "", artworkPath = composer.artworkPath,
+                            fallbackSymbol = MaterialSymbols.StylusFountainPen, artworkShape = CircleShape,
+                            titleStyle = MaterialTheme.typography.bodyLarge, subtitleGap = 0.dp, centerTitle = true,
+                            onClick = { onComposerClick(composer.id) },
+                        )
                     }
                 }
             }

@@ -182,6 +182,7 @@ fun TrackRow(
             }
             Text(
                 text = displayTitle,
+                modifier = rememberCardTextLine(MaterialTheme.typography.titleMedium).modifier,
                 inlineContent = if (explicit) explicitBadgeInlineContent(isRtlText(title, LocalLayoutDirection.current))
                     else emptyMap(),
                 style = MaterialTheme.typography.titleMedium,
@@ -191,11 +192,12 @@ fun TrackRow(
             )
             Text(
                 text = artist,
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.bodyMedium,
                 color = secondaryTextColor,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 2.dp),
+                modifier = Modifier.padding(top = 2.dp)
+                    .then(rememberCardTextLine(MaterialTheme.typography.bodyMedium).modifier),
             )
         }
 

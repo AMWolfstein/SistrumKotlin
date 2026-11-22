@@ -368,6 +368,14 @@
     <string name="theme_light">فاتح</string>
     <string name="theme_dark">داكن</string>
     <string name="navigate_back">رجوع</string>
+    <string name="home_recently_played">تم تشغيلها مؤخرًا</string>
+    <string name="home_mix_title">مزيج</string>
+    <string name="home_genre_mix">مزيج %1$s</string>
+    <string name="home_fresh_mix">مزيج الإضافات الجديدة</string>
+    <string name="home_rediscover_mix">مزيج إعادة الاكتشاف</string>
+    <string name="home_discover_mix">مزيج الاكتشاف</string>
+    <string name="home_favorites_mix">مزيج المفضّلة</string>
+    <string name="home_arabic_mix">موسيقى عربية</string>
     <string name="home_keep_listening">تابع الاستماع</string>
     <string name="home_most_played">الأكثر تشغيلًا</string>
     <string name="home_forgotten">يبدو أنك نسيت هذه</string>
@@ -567,7 +575,6 @@
         <item quantity="many">تحليل الجهارة: %1$d من %2$d مقطعًا</item>
         <item quantity="other">تحليل الجهارة: %1$d من %2$d مقطع</item>
     </plurals>
-    <string name="home_recent_full_list">عرض جميع المقاطع المضافة حديثًا</string>
     <string name="mornye_footer">%1$s · %2$s</string>
     <plurals name="mornye_songs">
         <item quantity="zero">%1$d أغنية</item>

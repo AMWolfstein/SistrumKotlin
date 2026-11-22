@@ -3,6 +3,9 @@ package com.amwolfstein.sistrum.ui.screens
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -12,30 +15,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import dev.chrisbanes.haze.HazeState
+import androidx.compose.ui.unit.sp
 import com.amwolfstein.sistrum.R
 import com.amwolfstein.sistrum.player.PlaybackQueueSnapshot
 import com.amwolfstein.sistrum.sync.isExplicit
 import com.amwolfstein.sistrum.ui.components.AlbumContextMenu
 import com.amwolfstein.sistrum.ui.components.HeroCard
 import com.amwolfstein.sistrum.ui.components.MaterialSymbols
+import com.amwolfstein.sistrum.ui.components.MornyeActionRow
+import com.amwolfstein.sistrum.ui.components.MornyeArtworkOverlay
+import com.amwolfstein.sistrum.ui.components.MornyeDetailFooter
+import com.amwolfstein.sistrum.ui.components.MornyeDetailScaffold
 import com.amwolfstein.sistrum.ui.components.TrackContextArtist
+import com.amwolfstein.sistrum.ui.components.TrackContextBottomSheetRequest
 import com.amwolfstein.sistrum.ui.components.TrackContextMenu
 import com.amwolfstein.sistrum.ui.components.TrackContextMenuActions
-import com.amwolfstein.sistrum.ui.components.TrackContextBottomSheetRequest
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
-import com.amwolfstein.sistrum.ui.components.MornyeDetailScaffold
-import com.amwolfstein.sistrum.ui.components.MornyeArtworkOverlay
-import com.amwolfstein.sistrum.ui.components.MornyeActionRow
 import com.amwolfstein.sistrum.ui.components.TrackRow
-import com.amwolfstein.sistrum.ui.components.MornyeDetailFooter
-import com.amwolfstein.sistrum.ui.components.trackInfoValues
 import com.amwolfstein.sistrum.ui.components.trackAudioQuality
+import com.amwolfstein.sistrum.ui.components.trackInfoValues
+import dev.chrisbanes.haze.HazeState
 
 @Composable
 internal fun AlbumDetailsContent(
@@ -86,6 +87,9 @@ internal fun AlbumDetailsContent(
     val multiDisc = uiState.tracks.map { it.discNumber.takeIf { n -> n > 0 } ?: 1 }.distinct().size > 1
     MornyeDetailScaffold(
         title = album.title,
+        titleStyle = MaterialTheme.typography.headlineMedium.copy(fontSize = 22.sp),
+        titleMaxLines = Int.MAX_VALUE,
+        titleBottomSpacing = 5.dp,
         onBack = onBack,
         artworkPath = album.artworkPath,
         audioPath = album.audioPath,
@@ -94,12 +98,19 @@ internal fun AlbumDetailsContent(
         modifier = modifier,
         bottomNavigationPadding = contentPadding.calculateBottomPadding(),
         header = {
-            Text(album.artist.ifBlank { stringResource(R.string.album_unknown_artist) },
-                Modifier.fillMaxWidth().testTag("album-mornye-artist"), color = Color.White, textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(metadata, Modifier.fillMaxWidth().testTag("album-mornye-metadata"), color = Color.White,
-                textAlign = TextAlign.Center, style = MaterialTheme.typography.bodySmall)
+            Text(
+                text = album.artist.ifBlank { stringResource(R.string.album_unknown_artist) },
+                modifier = Modifier.fillMaxWidth().testTag("album-mornye-artist"),
+                color = Color.White,
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 20.sp),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(metadata, Modifier.fillMaxWidth().padding(top = 5.dp).testTag("album-mornye-metadata"),
+                color = Color.White.copy(alpha = 0.72f), textAlign = TextAlign.Center, style = MaterialTheme.typography.labelMedium)
             MornyeActionRow(
+                topPadding = 16.dp,
                 onShuffle = onShuffle,
                 onPlay = onPlay,
                 onMore = { albumMenuExpanded = true },

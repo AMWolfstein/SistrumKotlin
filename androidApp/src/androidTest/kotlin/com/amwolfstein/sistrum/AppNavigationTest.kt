@@ -877,6 +877,10 @@ private fun reduceAppState(state: AppUiState, intent: AppIntent): AppUiState = w
             },
         )
     }
+    is AppIntent.OpenHomeMix -> reduceAppState(
+        state.copy(selectedHomeMixId = intent.mixId),
+        AppIntent.OpenPage(AppStackPage.HomeMix),
+    )
     is AppIntent.OpenAlbumDetails -> {
         val stack = state.stackFor(AppDestination.Library)
         state.copy(

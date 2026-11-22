@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.Dispatchers
 import com.amwolfstein.sistrum.sync.AndroidLibrarySyncStore
@@ -46,6 +47,9 @@ data class HomeUiState(
     val keepListeningTracks: List<LibraryTrack> = emptyList(),
     val mostPlayedTracks: List<LibraryTrack> = emptyList(),
     val forgottenTracks: List<LibraryTrack> = emptyList(),
+    val recentTracks: List<LibraryTrack> = emptyList(),
+    val recentlyPlayedTracks: List<LibraryTrack> = emptyList(),
+    val mixes: List<HomeLibraryMix> = emptyList(),
 )
 
 internal class LibraryTracksViewModel(
@@ -66,21 +70,29 @@ internal class LibraryTracksViewModel(
     private val sortOrderFlow = MutableStateFlow(SortOrder.Ascending)
     private val filterQueryFlow = MutableStateFlow("")
 
-    val homeUiState: StateFlow<HomeUiState> = syncStore.tracks
-        .map { rawTracks ->
+    val homeUiState: StateFlow<HomeUiState> = combine(
+        syncStore.tracks.map { tracks ->
             HomeUiState(
                 isLoaded = true,
-                keepListeningTracks = keepListeningTracks(rawTracks),
-                mostPlayedTracks = mostPlayedTracks(rawTracks),
-                forgottenTracks = forgottenTracks(rawTracks),
-            )
-        }
-        .flowOn(Dispatchers.Default)
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = HomeUiState(),
-        )
+                keepListeningTracks = keepListeningTracks(tracks),
+                mostPlayedTracks = mostPlayedTracks(tracks),
+                forgottenTracks = forgottenTracks(tracks),
+                recentTracks = recentlyAddedTracks(tracks),
+            ) to tracks.associateBy { it.id }
+        },
+        syncStore.recentlyPlayedTrackIds(HomeTrackLimit).onStart { emit(emptyList()) },
+    ) { (home, tracksById), recentlyPlayedIds ->
+        home.copy(recentlyPlayedTracks = recentlyPlayedIds.mapNotNull(tracksById::get))
+    }.combine(
+        combine(syncStore.tracks, syncStore.dailyTrackListeningStats, homeMixDays(), ::buildHomeLibraryMixes)
+            .onStart { emit(emptyList()) },
+    ) { home, mixes ->
+        home.copy(mixes = mixes)
+    }.flowOn(Dispatchers.Default).stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = HomeUiState(),
+    )
 
     val uiState: StateFlow<LibraryTracksUiState> = combine(
         syncStore.tracks,
@@ -92,13 +104,10 @@ internal class LibraryTracksViewModel(
             matchesVisibleTrackTextFilter(query, track)
         }
         val sorted = sortTracks(filtered, option, order)
-        val recent = rawTracks
-            .sortedWith(compareByDescending<LibraryTrack> { it.createdAt }.thenBy(libraryAlphabeticalComparator) { it.sortTitle }.thenBy { it.id })
-            .take(50)
         LibraryTracksUiState(
             isLoaded = true,
             tracks = sorted,
-            recentTracks = recent,
+            recentTracks = recentlyAddedTracks(rawTracks),
             filterQuery = query,
             sortOption = option,
             sortOrder = order,
@@ -152,6 +161,10 @@ internal class LibraryTracksViewModel(
 }
 
 internal const val HomeTrackLimit = 28
+
+private fun recentlyAddedTracks(tracks: List<LibraryTrack>): List<LibraryTrack> = tracks
+    .sortedWith(compareByDescending<LibraryTrack> { it.createdAt }.thenBy(libraryAlphabeticalComparator) { it.sortTitle }.thenBy { it.id })
+    .take(50)
 
 internal fun keepListeningTracks(tracks: List<LibraryTrack>): List<LibraryTrack> = tracks
     .filter { it.playCount > 0 }

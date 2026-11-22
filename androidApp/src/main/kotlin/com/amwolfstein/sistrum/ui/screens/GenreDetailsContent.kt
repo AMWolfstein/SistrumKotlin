@@ -7,30 +7,32 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
-import dev.chrisbanes.haze.HazeState
-import com.amwolfstein.sistrum.R
-import com.amwolfstein.sistrum.player.PlaybackQueueSnapshot
-import com.amwolfstein.sistrum.sync.LibraryAlbum
-import com.amwolfstein.sistrum.ui.components.AlbumRow
-import com.amwolfstein.sistrum.ui.components.HeroCard
-import com.amwolfstein.sistrum.ui.components.MornyeActionRow
-import com.amwolfstein.sistrum.ui.components.MornyeArtworkOverlay
-import com.amwolfstein.sistrum.ui.components.MornyeDetailScaffold
-import com.amwolfstein.sistrum.ui.components.MornyePlayShape
-import com.amwolfstein.sistrum.ui.components.MaterialSymbols
-import androidx.compose.ui.platform.testTag
-import com.amwolfstein.sistrum.ui.components.InsetListDivider
-import com.amwolfstein.sistrum.ui.components.GenreContextMenu
-import com.amwolfstein.sistrum.ui.components.TrackContextBottomSheetRequest
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.amwolfstein.sistrum.R
+import com.amwolfstein.sistrum.player.PlaybackQueueSnapshot
+import com.amwolfstein.sistrum.sync.LibraryAlbum
+import com.amwolfstein.sistrum.ui.components.AlbumRow
+import com.amwolfstein.sistrum.ui.components.GenreContextMenu
+import com.amwolfstein.sistrum.ui.components.HeroCard
+import com.amwolfstein.sistrum.ui.components.InsetListDivider
+import com.amwolfstein.sistrum.ui.components.MaterialSymbols
+import com.amwolfstein.sistrum.ui.components.MornyeActionRow
+import com.amwolfstein.sistrum.ui.components.MornyeArtworkOverlay
+import com.amwolfstein.sistrum.ui.components.MornyeDetailScaffold
+import com.amwolfstein.sistrum.ui.components.MornyePlayShape
+import com.amwolfstein.sistrum.ui.components.TrackContextBottomSheetRequest
+import dev.chrisbanes.haze.HazeState
 
 private const val GenreAlbumDividerTag = "genre-detail-album-divider"
 
@@ -79,7 +81,9 @@ internal fun GenreDetailsContent(
     }
     MornyeDetailScaffold(
         title = genre.name,
-        titleStyle = MaterialTheme.typography.displayLarge,
+        titleStyle = MaterialTheme.typography.headlineMedium.copy(fontSize = 22.sp),
+        titleMaxLines = Int.MAX_VALUE,
+        titleBottomSpacing = 5.dp,
         onBack = onBack,
         modifier = modifier,
         listState = listState,
@@ -100,6 +104,7 @@ internal fun GenreDetailsContent(
                 textAlign = TextAlign.Center,
             )
             MornyeActionRow(
+                topPadding = 16.dp,
                 onShuffle = onShuffle,
                 onPlay = onPlay,
                 playShape = MornyePlayShape.Circle,

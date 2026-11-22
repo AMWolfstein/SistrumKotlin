@@ -9,6 +9,8 @@ sealed interface AppIntent {
 
     data class OpenPage(val page: AppStackPage) : AppIntent
 
+    data class OpenHomeMix(val mixId: String) : AppIntent
+
     data class OpenAlbumDetails(val albumId: String) : AppIntent
 
     data class OpenPlaylistDetails(val playlistId: String) : AppIntent

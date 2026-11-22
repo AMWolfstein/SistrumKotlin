@@ -52,9 +52,9 @@ fun ComposerRow(
             modifier = Modifier
                 .weight(1f)
                 .padding(end = tokens.spacing.small),
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.bodyLarge,
             color = tokens.colors.text,
-            maxLines = 2,
+            maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
 

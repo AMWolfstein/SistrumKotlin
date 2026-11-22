@@ -51,6 +51,8 @@ fun HeroCard(
     icon: @Composable () -> Unit,
 ) {
     val colors = LocalSistrumColors.current
+    val titleStyle = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+    val descriptionStyle = MaterialTheme.typography.bodyMedium
     Card(
         modifier = modifier,
         contentPadding = PaddingValues(0.dp),
@@ -59,16 +61,16 @@ fun HeroCard(
             icon()
             Text(
                 text = title,
-                modifier = Modifier.padding(top = 12.dp),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(top = 12.dp).then(rememberCardTextLine(titleStyle).modifier),
+                style = titleStyle,
                 color = colors.textMain,
             )
             belowTitle?.invoke()
             Text(
                 text = description,
-                modifier = Modifier.padding(top = if (belowTitle == null) 8.dp else 12.dp),
-                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(top = if (belowTitle == null) 8.dp else 12.dp)
+                    .then(rememberCardTextLine(descriptionStyle).modifier),
+                style = descriptionStyle,
                 color = colors.textMuted,
             )
         }

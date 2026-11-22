@@ -89,12 +89,13 @@ class HomeContentTest {
         rule.onNodeWithTag("home-hero-t2").assertDoesNotExist()
     }
 
-    @Test fun largeLibraryIsVirtualizedAndTitleCollapsesOnScroll() {
+    @Test fun largeLibraryIsVirtualizedAndScrollsWithoutAnExtraHeader() {
         rule.setContent { SistrumTheme(ThemeMode.Dark) { HomeFixture(recent = homeTracks(1000), shelf = homeTracks(1000)) } }
-        rule.onNodeWithTag("home-large-title").assertIsDisplayed()
+        rule.onNodeWithTag("home-hero-t0").assertIsDisplayed()
         rule.onNodeWithTag("home-hero-t999").assertDoesNotExist()
-        rule.onNodeWithTag("home-list").performTouchInput { swipeUp() }
-        rule.onNodeWithTag("home-collapsed-title").assertIsDisplayed()
+        rule.onNodeWithTag("home-list").performScrollToIndex(1)
+        rule.onNodeWithTag("home-shelf-${R.string.home_keep_listening}").assertIsDisplayed()
+        rule.onNodeWithTag("home-collapsed-title").assertDoesNotExist()
     }
 
     @Test fun shelfClickAndLongPressKeepTrackActions() {
@@ -124,11 +125,12 @@ class HomeContentTest {
     @Test fun suppliedScrollStateIsUsedWhenHomeReturns() {
         rule.setContent { SistrumTheme(ThemeMode.Dark) {
             Box(Modifier.height(320.dp)) {
-                HomeFixture(shelf = homeTracks(20), state = rememberLazyListState(initialFirstVisibleItemIndex = 2))
+                HomeFixture(recent = homeTracks(20), shelf = homeTracks(20),
+                    state = rememberLazyListState(initialFirstVisibleItemIndex = 1))
             }
         } }
-        rule.onNodeWithTag("home-collapsed-title").assertIsDisplayed()
-        rule.onNodeWithTag("home-large-title").assertDoesNotExist()
+        rule.onNodeWithTag("home-shelf-${R.string.home_keep_listening}").assertIsDisplayed()
+        rule.onNodeWithTag("home-hero-t0").assertIsNotDisplayed()
     }
 
     @Test fun heroLongPressKeepsTrackActions() {
@@ -140,16 +142,17 @@ class HomeContentTest {
         rule.onNodeWithText(context.getString(R.string.track_context_play_next)).performClick()
         assertEquals(tracks[0], next)
     }
-    @Test fun fullRecentListIncludesEveryTrackAndPlaysTheOriginalQueue() {
+    @Test fun recentCarouselOmitsExtraControlsAndPlaysTheOriginalQueue() {
         val tracks = homeTracks(30)
         var queue = emptyList<LibraryTrack>()
         var selected = ""
         rule.setContent { SistrumTheme(ThemeMode.Dark) {
             HomeFixture(recent = tracks, click = { q, id -> queue = q; selected = id })
         } }
-        rule.onNodeWithTag("home-recent-full-list").performClick()
-        rule.onNodeWithTag("home-recent-list").performScrollToIndex(29)
-        rule.onNodeWithText("Song 29").performClick()
+        rule.onNodeWithTag("home-recent-full-list").assertDoesNotExist()
+        rule.onNodeWithTag("home-recent-carousel").performScrollToIndex(29)
+        rule.onNodeWithTag("home-open-library").assertDoesNotExist()
+        rule.onNodeWithTag("home-hero-t29").performClick()
         assertEquals(tracks, queue)
         assertEquals("t29", selected)
         rule.onNodeWithTag("home-recent-list").assertDoesNotExist()
@@ -177,7 +180,7 @@ class HomeContentMatrixTest(private val case: UiMatrix.Case) {
         if (case.language == "ar") assertTrue(b.left < a.left) else assertTrue(b.left > a.left)
         matrix.assertNoClippedActions(hasTestTag("home-hero-t0"))
         matrix.captureToImage()
-        rule.onNodeWithTag("home-list").performScrollToIndex(2)
+        rule.onNodeWithTag("home-list").performScrollToIndex(1)
         val shelfFirst = rule.onAllNodesWithTag("home-track-t0")[0].assertIsDisplayed()
         val shelfSecond = rule.onAllNodesWithTag("home-track-t1")[0]
         val firstBounds = shelfFirst.fetchSemanticsNode().boundsInRoot
@@ -206,7 +209,7 @@ class HomeRecentPanelTest(private val width: Int, private val scale: Float, priv
         }
     }
 
-    @Test fun cardsStayFixedAndTitlesEllipsize() {
+    @Test fun compactShelfCardsUseSquareCoversAndEllipsizeTitles() {
         val tracks = homeTracks(8).map { it.copy(album = "A very long album title ".repeat(12)) }
         rule.setContent {
             DeviceConfigurationOverride(DeviceConfigurationOverride.ForcedSize(DpSize(width.dp, 900.dp))) {
@@ -223,8 +226,8 @@ class HomeRecentPanelTest(private val width: Int, private val scale: Float, priv
         val first = rule.onNodeWithTag("home-hero-t0")
         val node = first.fetchSemanticsNode()
         val density = node.layoutInfo.density.density
-        assertEquals(280f * density, node.size.width.toFloat(), 1f)
-        assertEquals(300f * density, node.size.height.toFloat(), 1f)
+        assertEquals(160f * density, node.size.width.toFloat(), 1f)
+        assertTrue("The title and artist sit below the square cover", node.size.height > node.size.width)
         val a = node.boundsInRoot
         val b = rule.onNodeWithTag("home-hero-t1").fetchSemanticsNode().boundsInRoot
         if (rtl) assertTrue(b.left < a.left) else assertTrue(b.left > a.left)

@@ -185,7 +185,7 @@ class MainActivity : ComponentActivity() {
             val allTracks by AndroidSyncRuntime.syncStore().tracks.collectAsStateWithLifecycle(initialValue = emptyList())
             val moodRadioEligibleTrackIds by AndroidSyncRuntime.syncStore().moodRadioEligibleTrackIds.collectAsStateWithLifecycle(initialValue = emptySet())
             val allPlaylists by AndroidSyncRuntime.syncStore().playlists.collectAsStateWithLifecycle(initialValue = emptyList())
-            val homeUiState by if (activeDestination == AppDestination.Home && activePage == AppStackPage.Root) {
+            val homeUiState by if (activeDestination == AppDestination.Home) {
                 tracksViewModel.homeUiState.collectAsStateWithLifecycle()
             } else {
                 // AnimatedContent keeps the old page composed until its slide-out completes.

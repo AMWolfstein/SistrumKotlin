@@ -20,7 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.amwolfstein.sistrum.R
@@ -81,12 +80,14 @@ fun ArtistRow(
             }
         }
 
+        val titleStyle = MaterialTheme.typography.bodyLarge
         Text(
             text = name,
             modifier = Modifier
                 .weight(1f)
-                .padding(start = tokens.spacing.medium, end = tokens.spacing.small),
-            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                .padding(start = tokens.spacing.medium, end = tokens.spacing.small)
+                .then(rememberCardTextLine(titleStyle).modifier),
+            style = titleStyle,
             color = tokens.colors.text,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,

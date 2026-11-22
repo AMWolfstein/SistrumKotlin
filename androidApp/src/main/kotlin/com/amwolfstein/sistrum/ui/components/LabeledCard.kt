@@ -20,15 +20,15 @@ fun LabeledCard(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val colors = LocalSistrumColors.current
+    val labelStyle = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold)
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Text(
             text = label,
-            modifier = Modifier.padding(start = 18.dp),
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(start = 18.dp).then(rememberCardTextLine(labelStyle).modifier),
+            style = labelStyle,
             color = colors.textMuted,
         )
         Card(content = content)

@@ -29,6 +29,7 @@ import java.text.NumberFormat
 import com.amwolfstein.sistrum.ui.components.displayLocale
 import com.amwolfstein.sistrum.R
 import com.amwolfstein.sistrum.ui.components.Card
+import com.amwolfstein.sistrum.ui.components.rememberCardTextLine
 import com.amwolfstein.sistrum.ui.components.MaterialSymbol
 import com.amwolfstein.sistrum.ui.components.Selection
 import com.amwolfstein.sistrum.ui.components.SelectionOption
@@ -46,7 +47,10 @@ internal fun ChartCard(
     Card(contentPadding = contentPadding, modifier = Modifier.testTag("insight-card-$titleRes")) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(headerPadding).padding(bottom = 16.dp)) {
             MaterialSymbol(symbol, null, size = 18.dp, tint = LocalSistrumColors.current.textMuted)
-            Text(stringResource(titleRes), style = MaterialTheme.typography.labelLarge, color = LocalSistrumColors.current.textMuted, modifier = Modifier.padding(start = 8.dp))
+            val titleStyle = MaterialTheme.typography.labelLarge
+            Text(stringResource(titleRes),
+                modifier = Modifier.padding(start = 8.dp).then(rememberCardTextLine(titleStyle).modifier),
+                style = titleStyle, color = LocalSistrumColors.current.textMuted)
         }
         content()
     }
@@ -90,8 +94,12 @@ internal fun MetricPair(
 @Composable
 internal fun MetricCard(labelRes: Int, value: String, modifier: Modifier = Modifier) {
     Card(modifier = modifier, contentPadding = PaddingValues(18.dp)) {
-        Text(stringResource(labelRes), style = MaterialTheme.typography.labelMedium, color = LocalSistrumColors.current.textMuted)
-        Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, color = LocalSistrumColors.current.textMain, modifier = Modifier.padding(top = 8.dp))
+        val labelStyle = MaterialTheme.typography.labelMedium
+        val valueStyle = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold)
+        Text(stringResource(labelRes), modifier = rememberCardTextLine(labelStyle).modifier,
+            style = labelStyle, color = LocalSistrumColors.current.textMuted)
+        Text(value, modifier = Modifier.padding(top = 8.dp).then(rememberCardTextLine(valueStyle).modifier),
+            style = valueStyle, color = LocalSistrumColors.current.textMain)
     }
 }
 

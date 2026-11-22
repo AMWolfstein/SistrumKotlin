@@ -10,6 +10,7 @@ enum class AppDestination {
 /** Pages that can be placed on a destination's independent navigation stack. */
 enum class AppStackPage {
     Root,
+    HomeMix,
     LibrarySearch,
     LibraryArtists,
     ArtistDetails,
@@ -47,7 +48,7 @@ data class StackPageEntry(
 
 val AppStackPage.destination: AppDestination
     get() = when (this) {
-        AppStackPage.Root -> AppDestination.Home
+        AppStackPage.Root, AppStackPage.HomeMix -> AppDestination.Home
         AppStackPage.LibrarySearch,
         AppStackPage.LibraryArtists,
         AppStackPage.ArtistDetails,

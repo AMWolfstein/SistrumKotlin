@@ -10,6 +10,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.captureToImage
@@ -265,6 +268,39 @@ class ArtistDetailsContentTest {
         composeTestRule.onNodeWithText("Singles & EPs (1)").performScrollTo().assertIsDisplayed()
         composeTestRule.onNodeWithText("Compilations (1)").performScrollTo().assertIsDisplayed()
         composeTestRule.onNodeWithTag("artist-popular-pager").assertDoesNotExist()
+    }
+
+    @Test
+    fun arabicAndLatinReleaseTitlesKeepMetadataAtTheSameHeight() {
+        composeTestRule.setContent {
+            SistrumTheme(themeMode = ThemeMode.Dark) {
+                ArtistDetailsContent(
+                    uiState = ArtistDetailsUiState(
+                        artist = LibraryArtist("artist", "Tamer Hosny"),
+                        albums = listOf(
+                            LibraryAlbum("latin", "Mesh Hatkarar", "Tamer Hosny", year = 2026),
+                            LibraryAlbum("arabic", "لينا معاد", "Tamer Hosny", year = 2025),
+                        ),
+                        albumSongCounts = mapOf("latin" to 14, "arabic" to 15),
+                    ),
+                    listState = rememberLazyListState(),
+                )
+            }
+        }
+
+        val shelf = hasAnyAncestor(
+            hasTestTag("artist-shelf-albums"),
+        )
+        val latinMetadata = composeTestRule.onNode(shelf and hasText("2026 · 14 songs"), useUnmergedTree = true)
+        val arabicMetadata = composeTestRule.onNode(shelf and hasText("2025 · 15 songs"), useUnmergedTree = true)
+        composeTestRule.onNodeWithTag("artist-shelf-albums").performScrollTo()
+        latinMetadata.performScrollTo().assertIsDisplayed()
+        arabicMetadata.assertIsDisplayed()
+        assertEquals(
+            latinMetadata.fetchSemanticsNode().boundsInRoot.top,
+            arabicMetadata.fetchSemanticsNode().boundsInRoot.top,
+            1f,
+        )
     }
 
     @Test

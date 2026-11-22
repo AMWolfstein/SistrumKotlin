@@ -1,32 +1,27 @@
 package com.amwolfstein.sistrum.ui.navigation
 
-import com.amwolfstein.sistrum.ui.components.isRtlText
-import com.amwolfstein.sistrum.ui.components.ExplicitBadgeId
-import com.amwolfstein.sistrum.ui.components.explicitBadgeInlineContent
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.text.appendInlineContent
-import androidx.compose.ui.text.buildAnnotatedString
-import com.amwolfstein.sistrum.sync.isExplicit
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -40,31 +35,38 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import dev.chrisbanes.haze.HazeState
 import com.amwolfstein.sistrum.R
 import com.amwolfstein.sistrum.player.ArtworkCrossfadeTransition
 import com.amwolfstein.sistrum.player.PlaybackItem
 import com.amwolfstein.sistrum.player.PlaybackQueueSnapshot
 import com.amwolfstein.sistrum.sync.LibraryTrack
+import com.amwolfstein.sistrum.sync.isExplicit
+import com.amwolfstein.sistrum.ui.components.ExplicitBadgeId
+import com.amwolfstein.sistrum.ui.components.MaterialSymbol
+import com.amwolfstein.sistrum.ui.components.MaterialSymbols
 import com.amwolfstein.sistrum.ui.components.SistrumIconButton
 import com.amwolfstein.sistrum.ui.components.SistrumIconButtonVariant
 import com.amwolfstein.sistrum.ui.components.SistrumMarqueeText
 import com.amwolfstein.sistrum.ui.components.SistrumPillButton
 import com.amwolfstein.sistrum.ui.components.SistrumPillButtonVariant
-import com.amwolfstein.sistrum.ui.components.MaterialSymbol
-import com.amwolfstein.sistrum.ui.components.MaterialSymbols
 import com.amwolfstein.sistrum.ui.components.TrackContextBottomSheetRequest
 import com.amwolfstein.sistrum.ui.components.TrackContextMenu
 import com.amwolfstein.sistrum.ui.components.TrackContextMenuActions
 import com.amwolfstein.sistrum.ui.components.TrackInfoValue
+import com.amwolfstein.sistrum.ui.components.explicitBadgeInlineContent
+import com.amwolfstein.sistrum.ui.components.isRtlText
 import com.amwolfstein.sistrum.ui.theme.LocalSistrumColors
+import dev.chrisbanes.haze.HazeState
 
 internal const val FullScreenPlayerMetadataSwipeTestTag = "full_screen_player_metadata_swipe_target"
 
@@ -150,7 +152,10 @@ private fun FullScreenPlayerMetadata(
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f).clipToBounds().graphicsLayer { translationX = displayedHorizontalSwipeOffset }
             .semantics { testTag = FullScreenPlayerMetadataSwipeTestTag }) {
-            val titleStyle = if (compact) MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold) else MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+            val titleStyle = MaterialTheme.typography.bodyMedium.copy(
+                fontSize = if (compact) 18.sp else 22.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
             if (contextTrack?.isExplicit() == true) {
                 // The alternate text stands in for the badge in the title's text, so TalkBack
                 // reads "<title> Explicit".
@@ -161,7 +166,13 @@ private fun FullScreenPlayerMetadata(
             } else {
                 SistrumMarqueeText(item.title, colors.onPrimary, titleStyle, animate = isPlaying)
             }
-            SistrumMarqueeText(item.artist, colors.foregroundSubtle, if (compact) MaterialTheme.typography.bodySmall else MaterialTheme.typography.bodyMedium, animate = isPlaying)
+            Spacer(Modifier.height(4.dp))
+            SistrumMarqueeText(
+                item.artist,
+                colors.onPrimary.copy(alpha = 0.72f),
+                MaterialTheme.typography.bodyMedium.copy(fontSize = if (compact) 16.sp else 20.sp),
+                animate = isPlaying,
+            )
         }
         Spacer(Modifier.width(4.dp))
         if (!compact) SistrumIconButton(

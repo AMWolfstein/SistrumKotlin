@@ -67,6 +67,8 @@ fun MornyeDetailScaffold(
     onHeroColorChanged: (Color) -> Unit = {},
     artworkContent: (@Composable BoxScope.() -> Unit)? = null,
     titleStyle: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.headlineLarge,
+    titleMaxLines: Int = 1,
+    titleBottomSpacing: Dp = 12.dp,
     bottomNavigationPadding: Dp = 0.dp,
     artworkOverlay: MornyeArtworkOverlay = MornyeArtworkOverlay.None,
     header: @Composable ColumnScope.() -> Unit = {},
@@ -105,6 +107,7 @@ fun MornyeDetailScaffold(
             ) {
                 item(key = "mornye-header") {
                     val showArtworkOverlay = edgeToEdge && hasArtwork
+                    val overlapsTitle = artworkOverlay == MornyeArtworkOverlay.Title
                     val artwork: @Composable () -> Unit = {
                         Box(
                             Modifier.fillMaxWidth().hazeSource(haze),
@@ -127,14 +130,20 @@ fun MornyeDetailScaffold(
                             }
                         }
                     }
+                    val detailsHorizontalPadding = if (overlapsTitle) 20.dp else 16.dp
                     val titleContent: @Composable () -> Unit = {
                         Text(
                             title,
-                            Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp)
+                            Modifier.fillMaxWidth().padding(
+                                start = if (overlapsTitle) detailsHorizontalPadding else 24.dp,
+                                end = if (overlapsTitle) detailsHorizontalPadding else 24.dp,
+                                top = if (overlapsTitle) 0.dp else 12.dp,
+                                bottom = titleBottomSpacing,
+                            )
                                 .testTag("mornye-header-title"),
                             color = Color.White,
                             style = titleStyle,
-                            maxLines = 1,
+                            maxLines = titleMaxLines,
                             overflow = TextOverflow.Ellipsis,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center,
@@ -142,33 +151,46 @@ fun MornyeDetailScaffold(
                     }
                     val headerContent: @Composable () -> Unit = {
                         Column(
-                            Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                            Modifier.fillMaxWidth().padding(horizontal = detailsHorizontalPadding),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             content = header,
                         )
                     }
-                    if (showArtworkOverlay) {
-                        Column {
+                    val artworkFade: @Composable BoxScope.() -> Unit = {
+                        Box(Modifier.matchParentSize().background(Brush.verticalGradient(
+                            0.32f to Color.Transparent,
+                            0.62f to page.copy(alpha = 0.78f),
+                            1f to page,
+                        )))
+                    }
+                    when {
+                        showArtworkOverlay && overlapsTitle -> Column(
+                            verticalArrangement = Arrangement.spacedBy((-20).dp),
+                        ) {
+                            Box(Modifier.fillMaxWidth()) {
+                                artwork()
+                                artworkFade()
+                            }
+                            Column {
+                                titleContent()
+                                headerContent()
+                            }
+                        }
+                        showArtworkOverlay -> {
                             Box(Modifier.fillMaxWidth().heightIn(min = 360.dp)) {
                                 artwork()
-                                Box(Modifier.matchParentSize().background(Brush.verticalGradient(
-                                    0.32f to Color.Transparent,
-                                    0.62f to page.copy(alpha = 0.78f),
-                                    1f to page,
-                                )))
+                                artworkFade()
                                 Column(
                                     Modifier.align(Alignment.BottomCenter)
                                         .statusBarsPadding()
                                         .padding(top = 72.dp, bottom = 8.dp),
                                 ) {
                                     titleContent()
-                                    if (artworkOverlay == MornyeArtworkOverlay.Header) headerContent()
+                                    headerContent()
                                 }
                             }
-                            if (artworkOverlay == MornyeArtworkOverlay.Title) headerContent()
                         }
-                    } else {
-                        Column(Modifier.statusBarsPadding()) {
+                        else -> Column(Modifier.statusBarsPadding()) {
                             artwork()
                             titleContent()
                             headerContent()
@@ -196,7 +218,7 @@ fun MornyeDetailScaffold(
                 .heightIn(min = 56.dp), verticalAlignment = Alignment.CenterVertically) {
                 MornyeRoundAction(MaterialSymbols.ChevronLeft, stringResource(R.string.navigate_back), onBack)
                 if (collapsed) Text(title, Modifier.weight(1f).padding(vertical = 12.dp).testTag("mornye-collapsed-title"),
-                    color = Color.White, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center,
+                    color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center,
                     maxLines = 1, overflow = TextOverflow.Ellipsis)
                 else Spacer(Modifier.weight(1f))
                 Spacer(Modifier.size(48.dp))
@@ -221,10 +243,11 @@ fun MornyeActionRow(
     playShape: MornyePlayShape = MornyePlayShape.Pill,
     onMore: () -> Unit = {},
     moreLabel: String = stringResource(R.string.player_more),
+    topPadding: Dp = 12.dp,
 ) {
     val pill = playShape == MornyePlayShape.Pill
     val playLabel = stringResource(R.string.player_play)
-    Row(modifier.fillMaxWidth().padding(vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
+    Row(modifier.fillMaxWidth().padding(top = topPadding, bottom = 12.dp), horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically) {
         MornyeRoundAction(MaterialSymbols.Shuffle, stringResource(R.string.player_shuffle), onShuffle)
         Box(Modifier.weight(1f, fill = false).heightIn(min = 56.dp).then(if (pill) Modifier.widthIn(min = 144.dp) else Modifier.size(64.dp))

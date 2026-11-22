@@ -7,10 +7,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 data class DiscGridItem(
     val id: String,
@@ -49,6 +51,9 @@ fun LazyListScope.discGridItems(
                         artworkPath = item.artworkPath,
                         audioPath = item.audioPath,
                         fallbackSymbol = item.fallbackSymbol,
+                        titleStyle = MaterialTheme.typography.bodyMedium.copy(fontSize = 16.sp),
+                        subtitleStyle = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+                        subtitleGap = 0.dp,
                         onClick = onClick?.let { { it(item.id) } },
                         onLongClick = onLongClick?.let { { it(item.id) } },
                         modifier = Modifier.fillMaxWidth(),

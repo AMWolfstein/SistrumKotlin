@@ -1,5 +1,9 @@
 package com.amwolfstein.sistrum.ui.screens
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.requiredWidth
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.onNodeWithTag
@@ -263,6 +267,29 @@ class AlbumDetailsContentTest {
     }
 
     @Test
+    fun aladdinArtistCreditsFitOnOneLineAtReferenceWidth() {
+        val artists = "Alan Menken, Howard Ashman & Tim Rice"
+        composeTestRule.setContent {
+            val density = LocalDensity.current
+            CompositionLocalProvider(LocalDensity provides Density(density.density, 1f)) {
+                SistrumTheme(themeMode = ThemeMode.Dark) {
+                    Box(Modifier.requiredWidth(432.dp)) {
+                        AlbumDetailsContent(
+                            AlbumDetailsUiState(album = LibraryAlbum("album", "Aladdin", artists)),
+                        )
+                    }
+                }
+            }
+        }
+        val layouts = mutableListOf<TextLayoutResult>()
+        composeTestRule.onNodeWithTag("album-mornye-artist").assertTextEquals(artists)
+            .performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
+        val layout = layouts.single()
+        assertEquals(1, layout.lineCount)
+        assertTrue(!layout.isLineEllipsized(0))
+    }
+
+    @Test
     fun longArabicTitleAtFontTwoWrapsAndPlaybackAndBackActionsWork() {
         var plays = 0
         var shuffles = 0
@@ -282,6 +309,7 @@ class AlbumDetailsContentTest {
         composeTestRule.onNodeWithTag("mornye-header-title")
             .performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
         assertEquals(1, layouts.size)
+        assertTrue(layouts.single().lineCount > 1)
         assertTrue(!layouts.single().didOverflowHeight)
         assertTrue(!layouts.single().didOverflowWidth)
         assertTrue(!layouts.single().isLineEllipsized(layouts.single().lineCount - 1))

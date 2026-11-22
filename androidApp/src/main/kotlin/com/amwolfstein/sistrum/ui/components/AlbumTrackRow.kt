@@ -53,16 +53,19 @@ fun AlbumTrackRow(
         Column(Modifier
             .weight(1f)
             .padding(end = 8.dp), verticalArrangement = Arrangement.Center) {
+            val titleStyle = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
             Text(
                 title,
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                modifier = rememberCardTextLine(titleStyle).modifier,
+                style = titleStyle,
                 color = colors.textMain,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Text(
                 artist,
-                Modifier.padding(top = 2.dp),
+                Modifier.padding(top = 2.dp)
+                    .then(rememberCardTextLine(MaterialTheme.typography.bodySmall).modifier),
                 style = MaterialTheme.typography.bodySmall,
                 color = colors.textMuted,
                 maxLines = 1,

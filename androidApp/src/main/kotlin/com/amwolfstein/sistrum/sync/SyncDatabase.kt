@@ -260,6 +260,19 @@ internal interface SyncDao {
     @Query("SELECT * FROM playback_attempts WHERE endReason IS NULL")
     suspend fun openPlaybackAttempts(): List<PlaybackAttemptEntity>
 
+    @Query("""
+        SELECT attempt.trackId FROM playback_attempts AS attempt
+        WHERE (attempt.endedAt = 0 OR attempt.listenedSeconds > 0)
+        AND EXISTS (
+            SELECT 1 FROM sync_tracks AS track JOIN sync_plans AS active_plan ON track.planId = active_plan.planId
+            WHERE active_plan.active = 1 AND track.trackId = attempt.trackId
+        )
+        GROUP BY attempt.trackId
+        ORDER BY MAX(attempt.startedAt) DESC, attempt.trackId
+        LIMIT :limit
+    """)
+    fun observeRecentlyPlayedTrackIds(limit: Int): Flow<List<String>>
+
     @Query("INSERT INTO daily_track_listening_stats(sourceDeviceId,localDate,trackId,listenedSeconds,playCount) VALUES(:source,:date,:trackId,:seconds,:plays) ON CONFLICT(sourceDeviceId,localDate,trackId) DO UPDATE SET listenedSeconds=listenedSeconds+:seconds, playCount=playCount+:plays")
     suspend fun addDailyTrackStat(source: String, date: String, trackId: String, seconds: Int, plays: Int)
 
@@ -681,6 +694,9 @@ internal class AndroidLibrarySyncStore(
             document.documentKey.takeIf { value != null && listOf("energy", "danceability", "brightness", "tempo").all { key -> value[key]?.jsonPrimitive?.contentOrNull?.toDoubleOrNull() != null } }
         }.toSet()
     }.distinctUntilChanged()
+    fun recentlyPlayedTrackIds(limit: Int): Flow<List<String>> =
+        dao.observeRecentlyPlayedTrackIds(limit).distinctUntilChanged()
+
     val dailyTrackListeningStats: Flow<List<DailyTrackListeningStat>> = dao.observeDailyTrackStats().map { rows ->
         rows.map { DailyTrackListeningStat(it.sourceDeviceId, it.localDate, it.trackId, it.listenedSeconds, it.playCount) }
     }

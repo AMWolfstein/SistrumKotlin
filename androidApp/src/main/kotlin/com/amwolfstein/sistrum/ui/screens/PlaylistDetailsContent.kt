@@ -24,8 +24,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import dev.chrisbanes.haze.HazeState
 import com.amwolfstein.sistrum.R
+import com.amwolfstein.sistrum.ui.components.GenreContextMenu
 import com.amwolfstein.sistrum.ui.components.HeroCard
 import com.amwolfstein.sistrum.ui.components.MaterialSymbols
 import com.amwolfstein.sistrum.ui.components.MaterialSymbol
@@ -77,6 +79,7 @@ internal fun PlaylistDetailsContent(
     onPlaylistAddToQueue: (List<String>) -> Unit = {},
     onPlaylistUpdate: (String, String, android.net.Uri?, Boolean) -> Unit = { _, _, _, _ -> },
     onPlaylistDelete: (String) -> Unit = {},
+    isGeneratedMix: Boolean = false,
 ) {
     val tokens = LocalSistrumTokens.current
     val playlist = uiState.playlist
@@ -129,6 +132,9 @@ internal fun PlaylistDetailsContent(
     }
     MornyeDetailScaffold(
         title = name,
+        titleStyle = MaterialTheme.typography.headlineMedium.copy(fontSize = 22.sp),
+        titleMaxLines = Int.MAX_VALUE,
+        titleBottomSpacing = 5.dp,
         onBack = onBack,
         artworkPath = coverPaths.firstOrNull(),
         onHeroColorChanged = onHeroColorChanged,
@@ -138,20 +144,36 @@ internal fun PlaylistDetailsContent(
         artworkOverlay = MornyeArtworkOverlay.Title,
         artworkContent = if (uiState.customArtworkPath == null) {
             {
-                PlaylistArtwork(playlist.id, coverPaths, modifier = Modifier.fillMaxSize(), isHeader = true)
+                PlaylistArtwork(
+                    playlist.id, coverPaths, modifier = Modifier.fillMaxSize(), isHeader = true,
+                    preserveAspectRatio = isGeneratedMix,
+                )
             }
         } else null,
         header = {
-            Text(count, Modifier.fillMaxWidth(), color = Color.White,
-                textAlign = TextAlign.Center, style = MaterialTheme.typography.bodySmall)
+            Text(count, Modifier.fillMaxWidth(), color = Color.White.copy(alpha = 0.72f),
+                textAlign = TextAlign.Center, style = MaterialTheme.typography.labelMedium)
             MornyeActionRow(
+                topPadding = 16.dp,
                 onPlay = onPlay,
                 onShuffle = onShuffle,
                 moreLabel = stringResource(if (isReordering) R.string.playlist_reorder_done else R.string.album_row_more_options),
                 onMore = { if (isReordering) isReordering = false else playlistMenuExpanded = true },
                 menu = { action ->
                     if (isReordering) action()
-                    else PlaylistContextMenu(
+                    else if (isGeneratedMix) {
+                        GenreContextMenu(
+                            trackIds = trackIds,
+                            expanded = playlistMenuExpanded,
+                            onDismiss = { playlistMenuExpanded = false },
+                            hazeState = hazeState,
+                            playbackQueue = playbackQueue,
+                            onPlayNext = onPlaylistPlayNext,
+                            onAddToQueue = onPlaylistAddToQueue,
+                            onBottomSheetRequested = onTrackContextBottomSheet,
+                            anchor = action,
+                        )
+                    } else PlaylistContextMenu(
                         playlistId = playlist.id,
                         trackIds = trackIds,
                         expanded = playlistMenuExpanded,
@@ -213,7 +235,7 @@ internal fun PlaylistDetailsContent(
                     track = track,
                     expanded = contextTrack == track.id,
                     onDismiss = { if (contextTrack == track.id) contextTrack = null },
-                    actions = TrackContextMenuActions(removeFromPlaylist = playlist.id != FavoritesPlaylistId),
+                    actions = TrackContextMenuActions(removeFromPlaylist = playlist.id != FavoritesPlaylistId && !isGeneratedMix),
                     hazeState = hazeState,
                     playbackQueue = playbackQueue,
                     onPlayNext = { onTrackPlayNext(it.id) },

@@ -57,7 +57,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
@@ -400,7 +399,7 @@ internal fun MiniPlayer(
                     SistrumMarqueeText(
                         item.title,
                         colors.textMain,
-                        MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                        MaterialTheme.typography.titleSmall,
                         animate = isPlaying,
                     )
                     SistrumMarqueeText(item.artist, colors.textMuted, MaterialTheme.typography.bodySmall, animate = isPlaying)

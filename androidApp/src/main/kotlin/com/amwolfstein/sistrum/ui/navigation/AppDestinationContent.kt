@@ -26,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -40,6 +41,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.foundation.lazy.LazyListState
 import dev.chrisbanes.haze.HazeState
@@ -100,6 +102,8 @@ import com.amwolfstein.sistrum.ui.screens.LibraryPlaylistsContent
 import com.amwolfstein.sistrum.ui.screens.LibraryPlaylistsUiState
 import com.amwolfstein.sistrum.ui.screens.PlaylistDetailsContent
 import com.amwolfstein.sistrum.ui.screens.PlaylistDetailsUiState
+import com.amwolfstein.sistrum.ui.screens.localizedTitle
+import com.amwolfstein.sistrum.sync.LibraryPlaylist
 import com.amwolfstein.sistrum.ui.screens.playlistDetailsUiStateFor
 import com.amwolfstein.sistrum.ui.screens.AlbumDetailsContent
 import com.amwolfstein.sistrum.ui.screens.AlbumDetailsUiState
@@ -157,6 +161,7 @@ internal fun AppDestinationContent(
     composersListState: LazyListState = androidx.compose.foundation.lazy.rememberLazyListState(),
     playlistsListState: LazyListState = androidx.compose.foundation.lazy.rememberLazyListState(),
     selectedAlbumId: String? = null,
+    selectedHomeMixId: String? = null,
     selectedPlaylistId: String? = null,
     selectedArtistId: String? = null,
     selectedGenreId: String? = null,
@@ -356,24 +361,60 @@ internal fun AppDestinationContent(
                     when (currentPage.destination) {
                         AppDestination.Home -> HomeDestinationContent {
                             if (currentPage.page == AppStackPage.Root) {
-                            HomeContent(
-                                modifier = Modifier.fillMaxSize(),
-                                listState = homeListState,
-                                contentPadding = contentPadding,
-                                isLoaded = homeUiState.isLoaded,
-                                recentTracks = tracksUiState.recentTracks,
-                                keepListeningTracks = homeUiState.keepListeningTracks,
-                                mostPlayedTracks = homeUiState.mostPlayedTracks,
-                                forgottenTracks = homeUiState.forgottenTracks,
-                                onTrackClick = onHomeTrackClick,
-                                playbackQueue = playbackQueue,
-                                onTrackPlayNext = { track -> onTrackPlayNext(track.id) },
-                                onTrackAddToQueue = { track -> onTrackAddToQueue(track.id) },
-                                onTrackFavoriteToggle = { track, favorite -> onTrackFavoriteToggle(track.id, favorite) },
-                                onTrackAlbumClick = { track -> onIntent(AppIntent.OpenAlbumDetails(track.albumId)) },
-                                onTrackArtistClick = { artist -> onIntent(AppIntent.OpenArtistDetails(artist.id)) },
-                                onTrackContextBottomSheet = onTrackContextBottomSheet,
-                            )
+                                HomeContent(
+                                    modifier = Modifier.fillMaxSize(),
+                                    listState = homeListState,
+                                    contentPadding = contentPadding,
+                                    isLoaded = homeUiState.isLoaded,
+                                    recentTracks = homeUiState.recentTracks,
+                                    recentlyPlayedTracks = homeUiState.recentlyPlayedTracks,
+                                    mixes = homeUiState.mixes,
+                                    onOpenMix = { onIntent(AppIntent.OpenHomeMix(it)) },
+                                    keepListeningTracks = homeUiState.keepListeningTracks,
+                                    mostPlayedTracks = homeUiState.mostPlayedTracks,
+                                    forgottenTracks = homeUiState.forgottenTracks,
+                                    onTrackClick = onHomeTrackClick,
+                                    playbackQueue = playbackQueue,
+                                    onTrackPlayNext = { track -> onTrackPlayNext(track.id) },
+                                    onTrackAddToQueue = { track -> onTrackAddToQueue(track.id) },
+                                    onTrackFavoriteToggle = { track, favorite -> onTrackFavoriteToggle(track.id, favorite) },
+                                    onTrackAlbumClick = { track -> onIntent(AppIntent.OpenAlbumDetails(track.albumId)) },
+                                    onTrackArtistClick = { artist -> onIntent(AppIntent.OpenArtistDetails(artist.id)) },
+                                    onTrackContextBottomSheet = onTrackContextBottomSheet,
+                                )
+                            } else if (currentPage.page == AppStackPage.HomeMix) {
+                                val mix = homeUiState.mixes.firstOrNull { it.id == selectedHomeMixId }
+                                val name = mix?.localizedTitle().orEmpty()
+                                val tracks = mix?.tracks.orEmpty()
+                                val trackIds = remember(tracks) { tracks.map { it.id } }
+                                val details = remember(mix, name) {
+                                    if (mix == null) PlaylistDetailsUiState() else PlaylistDetailsUiState(
+                                        playlist = LibraryPlaylist("mix:${mix.id}", name, trackIds, "{}"),
+                                        tracks = tracks,
+                                        artworkPaths = mix.artworkPaths,
+                                    )
+                                }
+                                PlaylistDetailsContent(
+                                    uiState = details,
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentPadding = contentPadding,
+                                    hazeState = hazeState,
+                                    onBack = { onIntent(AppIntent.NavigateBack) },
+                                    onPlay = { tracks.firstOrNull()?.let { onHomeTrackClick(tracks, it.id) } },
+                                    onShuffle = { tracks.shuffled().let { queue ->
+                                        queue.firstOrNull()?.let { onHomeTrackClick(queue, it.id) }
+                                    } },
+                                    onTrackClick = { onHomeTrackClick(tracks, it) },
+                                    playbackQueue = playbackQueue,
+                                    onTrackPlayNext = onTrackPlayNext,
+                                    onTrackAddToQueue = onTrackAddToQueue,
+                                    onTrackFavoriteToggle = onTrackFavoriteToggle,
+                                    onTrackArtistClick = { onIntent(AppIntent.OpenArtistDetails(it.id)) },
+                                    onTrackContextBottomSheet = onTrackContextBottomSheet,
+                                    onPlaylistPlayNext = library.playlists.onPlayNext,
+                                    onPlaylistAddToQueue = library.playlists.onAddToQueue,
+                                    isGeneratedMix = true,
+                                )
                             }
                         }
                         AppDestination.Insight -> InsightDestinationContent {

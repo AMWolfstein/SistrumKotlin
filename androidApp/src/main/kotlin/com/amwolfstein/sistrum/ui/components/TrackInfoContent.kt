@@ -33,6 +33,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -195,10 +196,9 @@ internal fun TrackInfoContent(track: LibraryTrack, modifier: Modifier = Modifier
     val quality = remember(track) { trackAudioQuality(track) }
     val artwork = rememberArtworkThumbnail(track.artworkPath, track.audioPath, targetPx = 480)
     val metadata = track.metadataObject()
-    val albumArtist = metadata.string("raw_album_artist_names")
-        .ifBlank { metadata.joinedNames("album_artists") }
-        .ifBlank { track.artists }
-    val subtitle = listOf(albumArtist, track.album).filter(String::isNotBlank).joinToString(" · ")
+    val artist = track.artists.ifBlank {
+        metadata.string("raw_album_artist_names").ifBlank { metadata.joinedNames("album_artists") }
+    }
     val density = LocalDensity.current
     val topSafeInset = with(density) { WindowInsets.statusBars.getTop(this).toDp() }
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
@@ -218,8 +218,31 @@ internal fun TrackInfoContent(track: LibraryTrack, modifier: Modifier = Modifier
                     if (artwork != null) Image(artwork, null, Modifier.matchParentSize(), contentScale = ContentScale.Crop)
                     else MaterialSymbol(MaterialSymbols.MusicNote, null, size = 56.dp, tint = colors.textMuted)
                 }
-                Text(track.title, modifier = Modifier.padding(top = 20.dp), style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), color = colors.textMain, textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                if (subtitle.isNotBlank()) Text(subtitle, modifier = Modifier.padding(top = 4.dp), style = MaterialTheme.typography.bodyMedium, color = colors.textMuted, textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text(
+                    track.title,
+                    modifier = Modifier.padding(top = 20.dp),
+                    style = MaterialTheme.typography.headlineMedium.copy(fontSize = 22.sp),
+                    color = colors.textMain,
+                    textAlign = TextAlign.Center,
+                )
+                if (artist.isNotBlank()) Text(
+                    artist,
+                    modifier = Modifier.padding(top = 5.dp),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = colors.textMain,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (track.album.isNotBlank()) Text(
+                    track.album,
+                    modifier = Modifier.padding(top = if (artist.isBlank()) 5.dp else 0.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colors.textMuted,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
                 TrackQualityBadge(quality, Modifier.padding(top = 12.dp))
             }
         }

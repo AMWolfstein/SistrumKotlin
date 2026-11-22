@@ -29,6 +29,7 @@ import com.amwolfstein.sistrum.player.DecodeFailureLog
 import com.amwolfstein.sistrum.ui.components.SistrumPillButton
 import com.amwolfstein.sistrum.ui.components.SistrumPillButtonVariant
 import com.amwolfstein.sistrum.ui.components.Card
+import com.amwolfstein.sistrum.ui.components.rememberCardTextLine
 import com.amwolfstein.sistrum.ui.components.HeroCard
 import com.amwolfstein.sistrum.ui.components.MaterialSymbols
 import com.amwolfstein.sistrum.ui.theme.LocalSistrumColors
@@ -70,13 +71,15 @@ internal fun DecodeFailureLogContent(modifier: Modifier = Modifier) {
             description = stringResource(R.string.decode_log_description),
         )
         Card(contentPadding = PaddingValues(20.dp)) {
+            val summaryStyle = MaterialTheme.typography.bodyLarge
             Text(
                 text = if (hasEntries) {
                     pluralStringResource(R.plurals.decode_log_count, count, count)
                 } else {
                     stringResource(R.string.decode_log_empty)
                 },
-                style = MaterialTheme.typography.bodyLarge,
+                modifier = rememberCardTextLine(summaryStyle).modifier,
+                style = summaryStyle,
                 color = if (hasEntries) colors.textMain else colors.textMuted,
             )
         }

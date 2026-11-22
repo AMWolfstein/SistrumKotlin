@@ -23,7 +23,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.Dp
@@ -46,9 +45,11 @@ internal fun PlaylistRow(
     ) {
         PlaylistArtwork(playlistId, artworkPaths)
         Column(modifier = Modifier.weight(1f).padding(horizontal = tokens.spacing.medium)) {
+            val titleStyle = MaterialTheme.typography.titleSmall
             Text(
                 text = name,
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                style = titleStyle,
+                modifier = rememberCardTextLine(titleStyle).modifier,
                 color = tokens.colors.text,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -66,7 +67,14 @@ internal fun PlaylistRow(
 }
 
 @Composable
-internal fun PlaylistArtwork(playlistId: String, artworkPaths: List<String>, modifier: Modifier = Modifier, size: Dp = 110.dp, isHeader: Boolean = false) {
+internal fun PlaylistArtwork(
+    playlistId: String,
+    artworkPaths: List<String>,
+    modifier: Modifier = Modifier,
+    size: Dp = 110.dp,
+    isHeader: Boolean = false,
+    preserveAspectRatio: Boolean = false,
+) {
     val tokens = LocalSistrumTokens.current
     Box(
         modifier = modifier
@@ -78,7 +86,11 @@ internal fun PlaylistArtwork(playlistId: String, artworkPaths: List<String>, mod
         contentAlignment = Alignment.Center,
     ) {
         val targetPx = if (isHeader || size > 110.dp) 480 else 128
-        val contentScale = if (isHeader) ContentScale.FillBounds else ContentScale.Crop
+        val contentScale = when {
+            preserveAspectRatio -> ContentScale.Fit
+            isHeader -> ContentScale.FillBounds
+            else -> ContentScale.Crop
+        }
         when {
             artworkPaths.size >= 4 -> {
                 Column(Modifier.fillMaxSize()) {
@@ -108,5 +120,7 @@ private fun ColumnScope.PlaylistArtworkPair(paths: List<String>, targetPx: Int, 
 @Composable
 private fun PlaylistArtworkImage(path: String, modifier: Modifier, targetPx: Int, contentScale: ContentScale) {
     val bitmap = rememberArtworkThumbnail(path, targetPx = targetPx)
-    if (bitmap != null) Image(bitmap, null, modifier = modifier, contentScale = contentScale)
+    Box(modifier) {
+        if (bitmap != null) Image(bitmap, null, modifier = Modifier.matchParentSize(), contentScale = contentScale)
+    }
 }

@@ -8,6 +8,7 @@ import com.amwolfstein.sistrum.ui.components.MaterialSymbols
 
 @StringRes
 internal fun AppStackPage.titleRes(destination: AppDestination): Int = when (this) {
+    AppStackPage.HomeMix -> R.string.home_mix_title
     AppStackPage.LibrarySearch -> R.string.library_search
     AppStackPage.LibraryArtists -> R.string.library_artists
     AppStackPage.ArtistDetails -> R.string.artist_details_title

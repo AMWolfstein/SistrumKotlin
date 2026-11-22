@@ -330,6 +330,7 @@ internal fun App(
                 composersListState = composersListState,
                 playlistsListState = playlistsListState,
                 selectedAlbumId = uiState.selectedAlbumId,
+                selectedHomeMixId = uiState.selectedHomeMixId,
                 selectedPlaylistId = uiState.selectedPlaylistId,
                 selectedArtistId = uiState.selectedArtistId,
                 selectedGenreId = uiState.selectedGenreId,
@@ -361,7 +362,8 @@ internal fun App(
                 visible = currentPage == AppStackPage.ComposerDetails,
             )
             if (currentPage != AppStackPage.AlbumDetails && currentPage != AppStackPage.ArtistDetails &&
-                currentPage != AppStackPage.PlaylistDetails && currentPage != AppStackPage.GenreDetails) StackPageHeader(
+                currentPage != AppStackPage.PlaylistDetails && currentPage != AppStackPage.GenreDetails &&
+                currentPage != AppStackPage.HomeMix) StackPageHeader(
                 title = pageTitle,
                 hazeState = hazeState,
                 isContentScrolled = showHeaderBlur,

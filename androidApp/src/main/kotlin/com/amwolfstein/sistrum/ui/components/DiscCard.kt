@@ -20,8 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -39,6 +38,11 @@ fun DiscCard(
     artworkShape: Shape = LocalSistrumTokens.current.shapes.small,
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
+    titleModifier: Modifier = Modifier,
+    titleStyle: TextStyle = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+    subtitleStyle: TextStyle = MaterialTheme.typography.bodyMedium,
+    subtitleGap: Dp = DiscCardSubtitleGap,
+    centerTitle: Boolean = false,
 ) {
     val tokens = LocalSistrumTokens.current
     val bitmap = rememberArtworkThumbnail(artworkPath, audioPath, targetPx = 250)
@@ -89,20 +93,22 @@ fun DiscCard(
 
         Text(
             text = title,
-            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+            style = titleStyle,
             color = tokens.colors.text,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = DiscCardTitleGap, start = 2.dp, end = 2.dp),
+            modifier = titleModifier.then(if (centerTitle) Modifier.align(Alignment.CenterHorizontally) else Modifier).padding(top = DiscCardTitleGap, start = 2.dp, end = 2.dp)
+                .then(rememberCardTextLine(titleStyle).modifier),
         )
 
         Text(
             text = subtitle,
-            style = MaterialTheme.typography.bodyMedium,
+            style = subtitleStyle,
             color = tokens.colors.mutedText,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = DiscCardSubtitleGap, start = 2.dp, end = 2.dp, bottom = DiscCardBottomAllowance),
+            modifier = Modifier.padding(top = subtitleGap, start = 2.dp, end = 2.dp, bottom = DiscCardBottomAllowance)
+                .then(rememberCardTextLine(subtitleStyle).modifier),
         )
     }
 }
@@ -116,8 +122,8 @@ private val DiscCardBottomAllowance = 4.dp
 /** The height of a [DiscCard] of [width]: square artwork, one title line and one subtitle line. */
 @Composable
 internal fun discCardHeight(width: Dp): Dp {
-    // Measure the theme's single-line box at the current accessibility font scale.
-    val lineHeightPx = rememberTextMeasurer().measure(" ", style = MaterialTheme.typography.bodyMedium, maxLines = 1).size.height
-    val lineHeight = with(LocalDensity.current) { lineHeightPx.toDp() }
-    return width + DiscCardTitleGap + lineHeight + DiscCardSubtitleGap + lineHeight + DiscCardBottomAllowance
+    val subtitleStyle = MaterialTheme.typography.bodyMedium
+    val titleHeight = rememberCardTextLine(subtitleStyle.copy(fontWeight = FontWeight.SemiBold)).height
+    val subtitleHeight = rememberCardTextLine(subtitleStyle).height
+    return width + DiscCardTitleGap + titleHeight + DiscCardSubtitleGap + subtitleHeight + DiscCardBottomAllowance
 }
