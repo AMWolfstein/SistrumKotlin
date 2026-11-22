@@ -22,6 +22,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -94,10 +95,12 @@ fun DiscCard(
         Text(
             text = title,
             style = titleStyle,
+            textAlign = if (centerTitle) TextAlign.Center else titleStyle.textAlign,
             color = tokens.colors.text,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = titleModifier.then(if (centerTitle) Modifier.align(Alignment.CenterHorizontally) else Modifier).padding(top = DiscCardTitleGap, start = 2.dp, end = 2.dp)
+            modifier = titleModifier.fillMaxWidth()
+                .padding(top = DiscCardTitleGap, start = 2.dp, end = 2.dp)
                 .then(rememberCardTextLine(titleStyle).modifier),
         )
 
@@ -107,7 +110,8 @@ fun DiscCard(
             color = tokens.colors.mutedText,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = subtitleGap, start = 2.dp, end = 2.dp, bottom = DiscCardBottomAllowance)
+            modifier = Modifier.fillMaxWidth()
+                .padding(top = subtitleGap, start = 2.dp, end = 2.dp, bottom = DiscCardBottomAllowance)
                 .then(rememberCardTextLine(subtitleStyle).modifier),
         )
     }

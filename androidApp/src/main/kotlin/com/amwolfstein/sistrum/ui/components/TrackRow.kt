@@ -182,7 +182,10 @@ fun TrackRow(
             }
             Text(
                 text = displayTitle,
-                modifier = rememberCardTextLine(MaterialTheme.typography.titleMedium).modifier,
+                // Use the column's available width for ellipsis rather than the title's
+                // intrinsic width, which can underestimate some Arabic fallback glyphs.
+                modifier = Modifier.fillMaxWidth()
+                    .then(rememberCardTextLine(MaterialTheme.typography.titleMedium).modifier),
                 inlineContent = if (explicit) explicitBadgeInlineContent(isRtlText(title, LocalLayoutDirection.current))
                     else emptyMap(),
                 style = MaterialTheme.typography.titleMedium,
@@ -196,7 +199,7 @@ fun TrackRow(
                 color = secondaryTextColor,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 2.dp)
+                modifier = Modifier.fillMaxWidth().padding(top = 2.dp)
                     .then(rememberCardTextLine(MaterialTheme.typography.bodyMedium).modifier),
             )
         }
